@@ -1,0 +1,72 @@
+# SPEC-004: Força do especial definida pelo botão
+
+- **Status:** Implementada, aguardando teste em emulador
+- **Patch:** `patches/special-strength-by-button`
+- **Decisão relacionada:** [ADR-0004](../adr/ADR-0004-special-strength-tag-in-command.md)
+- **Combina com:** SPEC-002 (C/D marcam "forte" em `$271`) e SPEC-003 (especiais sem custo)
+
+## Comportamento desejado
+
+Independente do nível da barra de espírito (Rage):
+
+| Botão usado no comando | Versão do especial |
+|---|---|
+| Soco fraco (A) / chute fraco (B) | Fraca, igual à de barra vermelha. Se nessa versão o golpe "falha" (não sai), usa a versão média |
+| Soco forte (C) / chute forte (D) | Forte, igual à de barra cheia |
+
+**Versão de falha:** em 12 especiais, a versão de barra vermelha (id+2) não é um golpe fraco, e sim a animação de falha que o original mostra quando falta barra. Exemplos: Zanretsuken e Kohou do Ryo/Robert. Ela é identificada pelo bit 7 no byte de custo da tabela `$23BA4` (`$A0`, `$A4`, `$B0`...). Nesses golpes, o botão fraco usa a versão média (id+1), para que o golpe sempre saia. SUPER e DESPERATION não passam por essa regra e continuam como no original.
+
+## Comportamento original (referência)
+
+`$1D53E`, rotina comum dos especiais com níveis:
+
+| Barra (`$224`) | Nível (`$5C(a4)`) | Variante (`$10(a5)`) |
+|---|---|---|
+| ≥ `$40` | 3 | id + 0 (forte) |
+| ≥ `$20` | 2 | id + 1 |
+| < `$20` (vermelha) | 1 | id + 2 (fraca) |
+
+Os limites ficam em `$22AF0` (`$20`, `$40`).
+
+## Mapa de engenharia reversa
+
+| Endereço | O que é |
+|---|---|
+| `$1DFA0` | Leitor de comandos de especial (só para jogador humano, ver `$1DF7E`). Compara o histórico com `$270` |
+| `$1E102` | Grava o comando detectado em `$218(a6)` e arma o buffer `$A77` = 60 frames |
+| `$1B7F2` | Apaga `$218` quando o buffer expira |
+| `$1D82A` | Executa o `$218` pendente quando o jogador pode agir → `$1D41E` (`andi.w #$7f`) |
+| `$1D53E` | Escolhe o nível/variante pela barra (ponto do segundo hook) |
+| `$1D676` | Continuação comum depois do nível; `$1D69A` apaga `$218` |
+
+## Implementação
+
+1. **Na detecção (`$1E102`)**: o comando ganha o bit 9 (`$200`, "veio do jogador"). Se `$271` tem o bit 4 ou 5 (botão forte no frame do aperto), ganha também o bit 8 (`$100`).
+2. **Na escolha do nível (`$1D548`)**:
+   - sem bit 9 → regra original pela barra (IA)
+   - bit 9 e bit 8 → nível 3 / id + 0
+   - bit 9 sem bit 8 → nível 1 / id + 2; se `$23BA4[(id+2)*16 + 4]` tem o bit 7 (versão de falha) → nível 2 / id + 1
+
+O patch `free-special-moves` só zera custos abaixo de `$80`, então o bit 7 das versões de falha continua na tabela para essa checagem.
+
+Outros leitores de `$218` não são afetados pelos bits 8/9:
+- `$1D41E` mascara com `$7F`.
+- `$1C104` usa `btst.l` com registrador, que no 68000 é módulo 32.
+- `$2707A` e `$28AD8` só comparam "≥ `$40`/`$41`".
+- `$27FB2` e `$28A78` são da IA, que não passa pelo detector.
+
+A força vem de `$271` bits 4/5. Na SPEC-002 isso corresponde a C/D. Sem o patch de controles, corresponde ao A/B segurado do original. Os dois patches funcionam juntos ou separados.
+
+## Pendências / riscos
+
+- **IA**: segue a regra da barra. Se a CPU também passar pelo detector em algum modo (por exemplo, a demo), passa a usar a regra do botão.
+- **Especiais sem os 3 níveis**: o original sempre soma 0/1/2 ao id nessa rotina, então todos os golpes que passam por ela têm as 3 variantes.
+
+## Critérios de aceite (teste manual no FBNeo)
+
+- [ ] Bola de fogo com A, com barra cheia: sai a versão fraca (de barra vermelha)
+- [ ] Bola de fogo com C, com barra vermelha: sai a versão forte (de barra cheia)
+- [ ] Especial de chute: B sai fraco e D sai forte
+- [ ] Zanretsuken e Kohou do Ryo saem com A (versão média), sem gastar barra
+- [ ] Especial feito durante uma animação (buffer) mantém a força do botão usado
+- [ ] CPU continua soltando especiais normalmente

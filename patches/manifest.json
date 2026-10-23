@@ -1,0 +1,10 @@
+{
+  "base": "aof2",
+  "output": "aof2r",
+  "patches": [
+    "controls-4button-layout",
+    "free-special-moves",
+    "special-strength-by-button",
+    "spirit-charge-abc"
+  ]
+}

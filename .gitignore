@@ -1,0 +1,7 @@
+# ROMs/BIOS são propriedade da SNK: não versionar
+rom/*.zip
+bios/
+__pycache__/
+build/
+# Fightcade/FBNeo: binários de terceiros e ROMs
+emulator/
