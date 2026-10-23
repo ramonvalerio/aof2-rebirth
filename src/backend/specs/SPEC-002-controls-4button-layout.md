@@ -1,7 +1,7 @@
 # SPEC-002: Layout de controles de 4 botões
 
 - **Status:** Implementada, aguardando teste em emulador
-- **Patch:** `patches/controls-4button-layout`
+- **Patch:** `patches/global/controls-4button-layout` (global)
 - **Decisão relacionada:** [ADR-0002](../adr/ADR-0002-controls-input-translation-layer.md)
 
 ## Comportamento desejado

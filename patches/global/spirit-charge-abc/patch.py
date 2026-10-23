@@ -8,13 +8,8 @@ $68(a6): nenhuma direção segurada e (original) qualquer bit de $70.
 Usada em $1BA28 (20 frames na condição -> entra em carga) e $1B89E
 (continua carregando enquanto vale). A rotina é reescrita no lugar.
 """
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
-
-from asm68k import Branch, Ins, Label  # noqa: E402
-from patchlib import Hook, Patch  # noqa: E402
+from asm68k import Branch, Ins, Label
+from patchlib import Hook, Patch
 
 charge_condition = [
     # direções ($0F) e A/B/C ($70) do input bruto; D é ignorado como no original

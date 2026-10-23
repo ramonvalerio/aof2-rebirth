@@ -1,7 +1,7 @@
 # SPEC-005: Carregar a barra com A+B+C
 
 - **Status:** Implementada, aguardando teste em emulador
-- **Patch:** `patches/spirit-charge-abc`
+- **Patch:** `patches/global/spirit-charge-abc` (global)
 - **Combina com:** SPEC-002 (ver interação com o arremesso A+B)
 
 ## Comportamento desejado

@@ -1,7 +1,7 @@
 # SPEC-003: Especiais sem custo de barra
 
 - **Status:** Implementada, aguardando teste em emulador
-- **Patch:** `patches/free-special-moves`
+- **Patch:** `patches/global/free-special-moves` (global)
 - **Decisão relacionada:** [ADR-0003](../adr/ADR-0003-free-special-moves-via-move-table.md)
 - **Combina com:** SPEC-002 (os dois patches não tocam os mesmos bytes; o build garante isso)
 

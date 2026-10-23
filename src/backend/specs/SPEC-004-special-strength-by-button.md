@@ -1,7 +1,7 @@
 # SPEC-004: Força do especial definida pelo botão
 
 - **Status:** Implementada, aguardando teste em emulador
-- **Patch:** `patches/special-strength-by-button`
+- **Patch:** `patches/global/special-strength-by-button` (global)
 - **Decisão relacionada:** [ADR-0004](../adr/ADR-0004-special-strength-tag-in-command.md)
 - **Combina com:** SPEC-002 (C/D marcam "forte" em `$271`) e SPEC-003 (especiais sem custo)
 

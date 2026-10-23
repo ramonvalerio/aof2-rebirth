@@ -12,7 +12,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from build_rom import OUT_ZIP, ROOT, BuildError, build, load_patch, manifest_ids  # noqa: E402
+from build_rom import (  # noqa: E402
+    OUT_ZIP, ROOT, BuildError, build, load_patch, manifest_ids, scope_of,
+)
 
 FBNEO_DIR = ROOT / "emulator" / "emulator" / "fbneo"
 FBNEO_EXE = FBNEO_DIR / "fcadefbneo.exe"
@@ -67,15 +69,24 @@ class Launcher(tk.Tk):
         frm = ttk.Frame(self, padding=12)
         frm.pack(fill="both", expand=True)
 
-        ttk.Label(frm, text="Patches", font=("Segoe UI", 11, "bold")).pack(anchor="w")
+        # Globais: botões e mecânicas que valem para todos os personagens.
+        # Personagens: alterações de um personagem específico.
         self.vars = {}
-        box = ttk.Frame(frm)
-        box.pack(fill="x", pady=(4, 10))
-        for pid in manifest_ids():
-            p = load_patch(pid)
-            var = tk.BooleanVar(value=True)
-            self.vars[pid] = var
-            ttk.Checkbutton(box, text=p.title, variable=var).pack(anchor="w")
+        keys = manifest_ids()
+        globals_ = [k for k in keys if scope_of(k)[0] == "global"]
+        chars = {}
+        for k in keys:
+            scope, char = scope_of(k)
+            if scope == "character":
+                chars.setdefault(char, []).append(k)
+
+        self.section(frm, "Globais (todos os personagens)", globals_)
+        ttk.Label(frm, text="Personagens", font=("Segoe UI", 11, "bold")).pack(anchor="w")
+        if not chars:
+            ttk.Label(frm, text="(nenhum patch de personagem ainda)",
+                      foreground="gray").pack(anchor="w", pady=(2, 10))
+        for char, ks in chars.items():
+            self.section(frm, char.capitalize(), ks, sub=True)
 
         btns = ttk.Frame(frm)
         btns.pack(fill="x")
@@ -86,6 +97,16 @@ class Launcher(tk.Tk):
 
         self.log = tk.Text(frm, height=8, state="disabled", font=("Consolas", 9))
         self.log.pack(fill="both", expand=True, pady=(10, 0))
+
+    def section(self, parent, title, keys, sub=False):
+        font = ("Segoe UI", 10, "bold") if sub else ("Segoe UI", 11, "bold")
+        ttk.Label(parent, text=title, font=font).pack(anchor="w", padx=(12 if sub else 0, 0))
+        box = ttk.Frame(parent)
+        box.pack(fill="x", pady=(2, 10), padx=(12 if sub else 0, 0))
+        for k in keys:
+            var = tk.BooleanVar(value=True)
+            self.vars[k] = var
+            ttk.Checkbutton(box, text=load_patch(k).title, variable=var).pack(anchor="w")
 
     def write(self, msg):
         def append():

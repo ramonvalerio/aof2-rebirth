@@ -16,13 +16,8 @@ a força é registrada na detecção ($1E102), nos bits altos de $218:
 $1D41E já descarta esses bits (andi.w #$7f). Comandos sem o bit 9 (IA)
 seguem a regra original da barra.
 """
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
-
-from asm68k import Branch, Ins, JmpAbs, Label  # noqa: E402
-from patchlib import Block, Hook, Patch  # noqa: E402
+from asm68k import Branch, Ins, JmpAbs, Label
+from patchlib import Block, Hook, Patch
 
 AFTER_DETECT = 0x1E10C   # moveq #0,d0 / rts do detector
 LEVEL_DONE = 0x1D676     # continuação comum após escolher o nível

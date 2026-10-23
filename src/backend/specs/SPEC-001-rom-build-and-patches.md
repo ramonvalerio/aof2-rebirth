@@ -12,8 +12,9 @@ Gerar o rom hack `rom/aof2r.zip` (Art of Fighting 2 Rebirth) de forma reproduzí
 | Item | Caminho | Observação |
 |---|---|---|
 | ROM base | `rom/aof2.zip` | Set MAME/FBNeo `aof2` (NGM-056). Nunca é alterada. |
-| Manifest | `patches/manifest.json` | Lista ordenada dos patches ativos. |
-| Patches | `patches/<id>/patch.py` | Um diretório por alteração. |
+| Manifest | `patches/manifest.json` | Patches ativos: `"global"` (lista) e `"characters"` (personagem → lista). |
+| Patches globais | `patches/global/<id>/patch.py` | Botões e mecânicas que valem para todos os personagens. |
+| Patches de personagem | `patches/characters/<personagem>/<id>/patch.py` | Alterações de um personagem específico. |
 | Saída | `rom/aof2r.zip` | Recriada do zero a cada build. Mesmos nomes de arquivo do set `aof2`. |
 
 Comando: `python tools/build_rom.py` (`--list` lista os patches ativos).
@@ -28,7 +29,7 @@ Dependência: Python 3.10+ e `capstone` (`pip install capstone`).
 
 ## Contrato de um patch
 
-Cada `patches/<id>/patch.py` exporta `PATCH = Patch(...)` (`tools/patchlib.py`):
+Cada `patch.py` (global ou de personagem, ver [ADR-0005](../adr/ADR-0005-global-vs-character-patches.md)) exporta `PATCH = Patch(...)` (`tools/patchlib.py`):
 
 - `id`: igual ao nome da pasta, em kebab-case.
 - `title`: o que o patch faz.
@@ -52,6 +53,7 @@ Assembly: cada instrução é escrita como encoding hex + texto de desmontagem e
 
 - Um patch = uma alteração de comportamento, com sua própria spec.
 - Um patch não depende do endereço de bloco de outro patch. Se dois patches precisarem cooperar, a dependência deve ser explícita em uma spec/ADR.
+- Ordem de aplicação: todos os globais (na ordem do manifest) e depois os de personagem.
 - Desativar um patch = removê-lo do `manifest.json`; o restante continua funcionando.
 - Variáveis de RAM reaproveitadas ou novas devem ser listadas na spec do patch.
 

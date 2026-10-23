@@ -14,13 +14,8 @@ No original a força vinha de quanto tempo A/B ficavam segurados (8 frames).
 Os bytes $272/$273 do jogador (antes, timers de A/B) passam a ser:
   $272 = botões pendentes (bits 4-7)   $273 = frames restantes da janela
 """
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
-
-from asm68k import Branch, Ins, JmpAbs, Label  # noqa: E402
-from patchlib import Block, Hook, Patch  # noqa: E402
+from asm68k import Branch, Ins, JmpAbs, Label
+from patchlib import Block, Hook, Patch
 
 # Frames extras de espera por um segundo botão (A+B / C+D) depois do primeiro.
 PAIR_WINDOW = 2

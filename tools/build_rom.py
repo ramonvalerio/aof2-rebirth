@@ -4,7 +4,9 @@ Uso:  python tools/build_rom.py [--list]
 
 Regras (SPEC-001):
   - a ROM original nunca é alterada; a saída é recriada do zero a cada build;
-  - patches são aplicados na ordem do manifest;
+  - patches são aplicados na ordem do manifest: primeiro os globais
+    (patches/global/<id>), depois os de personagem
+    (patches/characters/<personagem>/<id>);
   - cada hook confere os bytes originais antes de gravar;
   - dois patches não podem tocar o mesmo byte (conflito = erro);
   - blocos novos são alocados sequencialmente na região livre FREE_START..FREE_END.
@@ -41,13 +43,16 @@ def swap16(data):
     return b
 
 
-def load_patch(pid):
-    path = ROOT / "patches" / pid / "patch.py"
-    spec = importlib.util.spec_from_file_location(f"patch_{pid.replace('-', '_')}", path)
+def load_patch(key):
+    """Carrega patches/<key>/patch.py; key = "global/<id>" ou "characters/<personagem>/<id>"."""
+    path = ROOT / "patches" / key / "patch.py"
+    name = "patch_" + key.replace("/", "__").replace("-", "_")
+    spec = importlib.util.spec_from_file_location(name, path)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
-    if mod.PATCH.id != pid:
-        raise ValueError(f"{path}: PATCH.id '{mod.PATCH.id}' difere da pasta '{pid}'")
+    leaf = key.rsplit("/", 1)[-1]
+    if mod.PATCH.id != leaf:
+        raise ValueError(f"{path}: PATCH.id '{mod.PATCH.id}' difere da pasta '{leaf}'")
     return mod.PATCH
 
 
@@ -56,7 +61,18 @@ class BuildError(Exception):
 
 
 def manifest_ids():
-    return json.loads(MANIFEST.read_text(encoding="utf-8"))["patches"]
+    """Chaves dos patches na ordem de aplicação: globais e depois personagens."""
+    m = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    keys = [f"global/{pid}" for pid in m.get("global", [])]
+    for char, ids in m.get("characters", {}).items():
+        keys += [f"characters/{char}/{pid}" for pid in ids]
+    return keys
+
+
+def scope_of(key):
+    """("global", None) ou ("character", <personagem>)."""
+    parts = key.split("/")
+    return ("global", None) if parts[0] == "global" else ("character", parts[1])
 
 
 def build(patch_ids, out_zip=OUT_ZIP, log=print):
@@ -65,7 +81,8 @@ def build(patch_ids, out_zip=OUT_ZIP, log=print):
     unknown = set(patch_ids) - set(order)
     if unknown:
         raise BuildError(f"patches fora do manifest: {sorted(unknown)}")
-    patches = [load_patch(pid) for pid in order if pid in patch_ids]
+    keys = [k for k in order if k in patch_ids]
+    patches = [load_patch(k) for k in keys]
 
     with zipfile.ZipFile(SRC_ZIP) as z:
         files = {i.filename: z.read(i) for i in z.infolist()}
@@ -128,8 +145,10 @@ def build(patch_ids, out_zip=OUT_ZIP, log=print):
 def main():
     ids = manifest_ids()
     if "--list" in sys.argv:
-        for p in map(load_patch, ids):
-            print(f"{p.id:40} {p.title}  ({p.spec})")
+        for k in ids:
+            p = load_patch(k)
+            scope, char = scope_of(k)
+            print(f"[{char or scope}] {p.id:36} {p.title}")
         return
     try:
         build(ids)

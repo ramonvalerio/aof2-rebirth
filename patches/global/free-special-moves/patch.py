@@ -13,12 +13,7 @@ Lista gerada a partir das tabelas de golpes por personagem ($1E848 / $1E888):
 comandos $40-$47 cujo handler NÃO é $1D5A8 (SUPER) nem $1D460/$1D576
 (DESPERATION), incluindo as variantes que o handler escolhe com addq #8,a0.
 """
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools"))
-
-from patchlib import Data, Patch  # noqa: E402
+from patchlib import Data, Patch
 
 MOVE_TABLE = 0x23BA4
 ENTRY_SIZE = 16
