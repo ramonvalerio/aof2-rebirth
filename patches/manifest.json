@@ -7,5 +7,9 @@
     "special-strength-by-button",
     "spirit-charge-abc"
   ],
-  "characters": {}
+  "characters": {
+    "ryo": [
+      "air-fireball-forward-jump"
+    ]
+  }
 }

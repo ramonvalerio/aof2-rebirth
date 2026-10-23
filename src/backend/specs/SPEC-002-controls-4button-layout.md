@@ -12,7 +12,7 @@
 | B | Chute fraco |
 | C | Soco forte |
 | D | Chute forte |
-| A + B | Arremesso (throw), se estiver perto |
+| A + C | Arremesso (throw), se estiver perto |
 | A + D | Uppercut (no original: A + C) |
 | B + D | Chute baixo (no original: B + C) |
 | START | Provocação (taunt) (no original: D) |
@@ -75,7 +75,7 @@ A cada frame:
 2. Se o START do controle deste jogador foi recém-pressionado, liga `$271` bit 7 (provocação). O controle vem de `-$19E(a6)` (0 = P1, 1 = P2); o START, de `a5+$32B` (bit 0 = P1, bit 2 = P2, lido de `$380000` em `$922E`).
 3. Botões recém-pressionados entram em `$272`. No primeiro botão, a janela vale `PAIR_WINDOW` (2).
 4. Pares, nesta ordem de prioridade (o par é consumido e a fila é limpa):
-   - A+B → `$271` bit 6 (arremesso)
+   - A+C → `$271` bit 6 (arremesso)
    - A+D → `$270` bits 4+6 (uppercut)
    - B+D → `$270` bits 5+6 (chute baixo)
 5. Se a janela não acabou, espera. Quando acaba, resolve os botões isolados:
@@ -95,7 +95,7 @@ Latência: um golpe isolado sai 2 frames depois do aperto. No original, o golpe 
 - **START em jogo:** no AES ou em modo de 2 jogadores, o START pode ter outros usos (pausa, entrada de desafiante). Verificar se há conflito.
 - **Golpes especiais:** a detecção de comandos (`$27xxx–$29xxx`) lê o input bruto. Especiais com A/B continuam iguais; ainda não foi verificado se C/D contam como soco/chute nos especiais.
 - **Ataques no ar e outros estados:** precisam ser verificados em jogo (`$1C49A` e `$1C5F6` leem `$69` bruto).
-- **A+B longe do oponente:** não faz nada, como o C original longe do oponente.
+- **A+C longe do oponente:** não faz nada, como o C original longe do oponente.
 - **CPU:** a IA não passa por `$68` na luta (a confirmar em jogo).
 - **Modo demo:** reproduz input bruto gravado no layout antigo e pode ficar diferente.
 
@@ -103,8 +103,12 @@ Latência: um golpe isolado sai 2 frames depois do aperto. No original, o golpe 
 
 - [ ] A / B tocados geram soco / chute fraco, em pé e agachado
 - [ ] C / D geram soco / chute forte
-- [ ] A+B perto do oponente arremessa
+- [ ] A+C perto do oponente arremessa
 - [ ] A+D faz o uppercut e B+D faz o chute baixo
 - [ ] START provoca e drena o espírito do oponente, para o P1 e para o P2
 - [ ] Especiais com A/B continuam saindo
 - [ ] CPU luta normalmente
+
+## Revisão (2026-10-23): arremesso em A+C
+
+O arremesso passou de A+B para A+C. A+B deixa de ser combinação e sai como botões isolados (o soco tem prioridade sobre o chute). Note que A+C era o uppercut no jogo original; aqui o uppercut continua em A+D.

@@ -2,7 +2,7 @@
 
 - **Status:** Implementada, aguardando teste em emulador
 - **Patch:** `patches/global/spirit-charge-abc` (global)
-- **Combina com:** SPEC-002 (ver interação com o arremesso A+B)
+- **Combina com:** SPEC-002 (ver interação com o arremesso A+C)
 
 ## Comportamento desejado
 
@@ -28,7 +28,7 @@ A rotina `$1B9FE` é reescrita no lugar (24 bytes, sem bloco novo). Ela passa a 
 
 ## Interação com a SPEC-002 (pendência)
 
-No patch de controles, A+B é o arremesso. Ao apertar A+B+C, o tradutor de input vê o par A+B e gera o pedido de arremesso:
+No patch de controles, A+C é o arremesso. Ao apertar A+B+C, o tradutor de input vê o par A+C e gera o pedido de arremesso:
 - **longe do oponente:** o pedido é ignorado e, depois de 20 frames segurando, a barra carrega normalmente;
 - **perto do oponente:** sai o arremesso em vez de começar a carga.
 

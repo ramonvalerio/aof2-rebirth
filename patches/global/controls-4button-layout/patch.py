@@ -1,7 +1,7 @@
 """controls-4button-layout — SPEC-002.
 
 A=soco fraco, B=chute fraco, C=soco forte, D=chute forte,
-A+B=arremesso, A+D=uppercut, B+D=chute baixo, START=provocação.
+A+C=arremesso, A+D=uppercut, B+D=chute baixo, START=provocação.
 
 Substitui a rotina original $1D87C, que traduz o input bruto do jogador
 ($68 seguro / $69 recém-pressionado) nos comandos de luta:
@@ -17,7 +17,7 @@ Os bytes $272/$273 do jogador (antes, timers de A/B) passam a ser:
 from asm68k import Branch, Ins, JmpAbs, Label
 from patchlib import Block, Hook, Patch
 
-# Frames extras de espera por um segundo botão (A+B / C+D) depois do primeiro.
+# Frames extras de espera por um segundo botão (A+C / A+D / B+D) depois do primeiro.
 PAIR_WINDOW = 2
 
 # Cauda da rotina original: libera o estado de "C segurado" ($A6F/$A70).
@@ -52,10 +52,10 @@ translate_input = [
     Label("check"),
     Ins("102e0272", "move.b $272(a6), d0"),
     Branch("beq", "done"),
-    # A+B -> arremesso
-    Ins("7230", "moveq #$30, d1"),
+    # A+C -> arremesso
+    Ins("7250", "moveq #$50, d1"),
     Ins("c200", "and.b d0, d1"),
-    Ins("0c010030", "cmpi.b #$30, d1"),
+    Ins("0c010050", "cmpi.b #$50, d1"),
     Branch("beq", "throw"),
     # A+D -> uppercut (soco com "C segurado")
     Ins("7290", "moveq #$90, d1"),
@@ -102,7 +102,7 @@ translate_input = [
 
 PATCH = Patch(
     id="controls-4button-layout",
-    title="Controles: C/D fortes, A+B arremesso, A+D uppercut, B+D chute baixo, START provoca",
+    title="Controles: C/D fortes, A+C arremesso, A+D uppercut, B+D chute baixo, START provoca",
     spec="src/backend/specs/SPEC-002-controls-4button-layout.md",
     blocks=[Block("translate_input", translate_input)],
     hooks=[

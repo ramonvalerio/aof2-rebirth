@@ -6,7 +6,7 @@
 
 ## Contexto
 
-O layout novo (A/B fracos, C/D fortes, A+B arremesso, A+D uppercut, B+D chute baixo, START provocação) não pode ser feito só remapeando botões: no original, a força vem do tempo que A/B ficam segurados. "Soco forte" não corresponde a nenhum botão físico.
+O layout novo (A/B fracos, C/D fortes, A+C arremesso, A+D uppercut, B+D chute baixo, START provocação) não pode ser feito só remapeando botões: no original, a força vem do tempo que A/B ficam segurados. "Soco forte" não corresponde a nenhum botão físico.
 
 Pontos de intervenção avaliados:
 
@@ -16,7 +16,7 @@ Pontos de intervenção avaliados:
 
 ## Decisão
 
-Fazer o hook no tradutor de input (`$1D87C`) e reescrevê-lo em um bloco novo, mantendo o mesmo formato de saída. O jogo inteiro continua consumindo `$270/$271` sem saber que o input mudou. Combinações usam uma janela curta (`PAIR_WINDOW` = 2 frames) para que apertos "quase simultâneos" de A+B / A+D / B+D funcionem sem disparar o golpe fraco antes.
+Fazer o hook no tradutor de input (`$1D87C`) e reescrevê-lo em um bloco novo, mantendo o mesmo formato de saída. O jogo inteiro continua consumindo `$270/$271` sem saber que o input mudou. Combinações usam uma janela curta (`PAIR_WINDOW` = 2 frames) para que apertos "quase simultâneos" de A+C / A+D / B+D funcionem sem disparar o golpe fraco antes.
 
 ## Consequências
 
@@ -31,3 +31,5 @@ Fazer o hook no tradutor de input (`$1D87C`) e reescrevê-lo em um bloco novo, m
 ## Revisão (2026-10-23)
 
 C+D como provocação foi substituído por START, porque as combinações A+C / B+C do original (uppercut / chute baixo) precisavam ser preservadas e foram movidas para A+D / B+D.
+
+Arremesso movido de A+B para A+C (pedido de design). A mudança é só a máscara do par no tradutor (`$30` → `$50`).

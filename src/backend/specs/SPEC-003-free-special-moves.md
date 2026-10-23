@@ -36,7 +36,7 @@ O patch é só de dados: zera o byte de custo (`$23BA4 + id*16 + 4`) dos golpes 
 
 Cada especial que passa por `$1D53E` tem três versões consecutivas: id+0 (forte), id+1 (média) e id+2 (fraca). As três também ficam com custo 0 (lista `TIER_VARIANTS`). Isso não vale para o handler `$1D644`, que não usa níveis.
 
-Resultado da análise (14 personagens):
+Resultado da análise (13 personagens; a entrada 0 das tabelas é uma cópia do Ryo, ver SPEC-006):
 - 69 golpes base passam a custar 0 (66 diretos + 3 variantes escolhidas pelo handler)
 - 109 versões média/fraca passam a custar 0
 - 24 SUPER/DESPERATION mantêm o custo
@@ -46,8 +46,8 @@ Histórico: a primeira versão zerava só a id+0. Com a SPEC-004, o botão fraco
 
 ## Pendências / riscos
 
-- **Golpe `$08E` do personagem 4 (comando `$3F`, custo `$60`)**: fica fora da faixa `$40–$47`. Foi mantido com o custo original porque parece ser o DESPERATION desse personagem. Confirmar em jogo.
-- **Personagem 13 (chefe)**: não tem SUPER/DESPERATION na faixa analisada; todos os especiais dele ficam grátis.
+- **Golpe `$08E` do Jack (`$62` = 4, comando `$3F`, custo `$60`)**: fica fora da faixa `$40–$47`. Foi mantido com o custo original porque parece ser o DESPERATION desse personagem. Confirmar em jogo.
+- **Geese (`$62` = 13, chefe)**: não tem SUPER/DESPERATION na faixa analisada; todos os especiais dele ficam grátis.
 - **Força das bolas de fogo**: em alguns golpes o tamanho ainda depende do nível atual da barra (`$1D52A`), não do custo. Isso continua igual ao original.
 - **IA**: se a CPU usa o custo para decidir quando soltar especiais, pode passar a soltar mais. Observar em jogo.
 

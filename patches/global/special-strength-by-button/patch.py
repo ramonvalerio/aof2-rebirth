@@ -15,6 +15,10 @@ a força é registrada na detecção ($1E102), nos bits altos de $218:
   bit 8 = botão forte ($271 bit 4/5 no frame da detecção)
 $1D41E já descarta esses bits (andi.w #$7f). Comandos sem o bit 9 (IA)
 seguem a regra original da barra.
+
+O tamanho do projétil é decidido à parte, em $22A5C, pela cópia da barra
+$23F feita em $1D7DE. Por isso a escolha também grava em $23F uma barra
+equivalente ao nível do botão (snapshot_gauge preserva esse valor).
 """
 from asm68k import Branch, Ins, JmpAbs, Label
 from patchlib import Block, Hook, Patch
@@ -22,6 +26,7 @@ from patchlib import Block, Hook, Patch
 AFTER_DETECT = 0x1E10C   # moveq #0,d0 / rts do detector
 LEVEL_DONE = 0x1D676     # continuação comum após escolher o nível
 GAUGE_CONT = 0x1D554     # bcc.w do teste original de barra
+AFTER_SNAPSHOT = 0x1D7E4 # depois da cópia da barra em $1D7DE
 
 # Substitui: move.w d0,$218(a6) / move.b #$3c,$a77(a6)
 tag_command = [
@@ -38,12 +43,19 @@ tag_command = [
     JmpAbs(AFTER_DETECT),
 ]
 
+# Barra "equivalente" gravada em $23F para o tamanho do projétil ($22A5C usa
+# $23F com os mesmos limites $20/$40). Bit 7 = valor definido pelo botão;
+# a barra real vai no máximo até $78, então o bit 7 nunca aparece nela.
+GAUGE_STRONG = 0xC0   # $40 | marca
+GAUGE_MEDIUM = 0xA0   # $20 | marca
+GAUGE_WEAK = 0x80     # $00 | marca
+
 # Substitui: lea $22af0(pc),a1 / move.b $224(a6),d0 / cmp.b 1(a1),d0
 pick_level = [
     Ins("082e00010218", "btst.b #$1, $218(a6)"),
     Branch("beq", "by_gauge"),
     Ins("082e00000218", "btst.b #$0, $218(a6)"),
-    Branch("bne", "full"),
+    Branch("bne", "strong"),
     # botão fraco: versão de barra vermelha (id+2), a menos que ela seja a
     # versão de "falha" (custo com bit 7 na tabela $23BA4) -> usa a média (id+1)
     Ins("302d0010", "move.w $10(a5), d0"),
@@ -54,12 +66,17 @@ pick_level = [
     Branch("beq", "red"),
     Ins("197c0002005c", "move.b #$2, $5c(a4)"),
     Ins("526d0010", "addq.w #$1, $10(a5)"),
-    Branch("bra", "full"),
+    Ins(f"1d7c00{GAUGE_MEDIUM:02x}023f", f"move.b #${GAUGE_MEDIUM:x}, $23f(a6)"),
+    Branch("bra", "done"),
     Label("red"),
     Ins("197c0001005c", "move.b #$1, $5c(a4)"),
     Ins("546d0010", "addq.w #$2, $10(a5)"),
-    Label("full"),
-    # botão forte: nível 3 / id+0 já definidos em $1D542
+    Ins(f"1d7c00{GAUGE_WEAK:02x}023f", f"move.b #${GAUGE_WEAK:x}, $23f(a6)"),
+    Branch("bra", "done"),
+    Label("strong"),
+    # nível 3 / id+0 já definidos em $1D542
+    Ins(f"1d7c00{GAUGE_STRONG:02x}023f", f"move.b #${GAUGE_STRONG:x}, $23f(a6)"),
+    Label("done"),
     JmpAbs(LEVEL_DONE),
     Label("by_gauge"),
     # regra original (comandos da IA)
@@ -69,13 +86,30 @@ pick_level = [
     JmpAbs(GAUGE_CONT),
 ]
 
+# Substitui: move.b $224(a6),$23f(a6) em $1D7DE (cópia da barra antes do custo).
+# Se pick_level marcou $23F (bit 7), mantém o valor do botão; senão, original.
+snapshot_gauge = [
+    Ins("082e0007023f", "btst.b #$7, $23f(a6)"),
+    Branch("beq", "original"),
+    Ins("022e007f023f", "andi.b #$7f, $23f(a6)"),
+    JmpAbs(AFTER_SNAPSHOT),
+    Label("original"),
+    Ins("1d6e0224023f", "move.b $224(a6), $23f(a6)"),
+    JmpAbs(AFTER_SNAPSHOT),
+]
+
 PATCH = Patch(
     id="special-strength-by-button",
     title="Força do especial pelo botão (fraco = barra vermelha, forte = barra cheia)",
     spec="src/backend/specs/SPEC-004-special-strength-by-button.md",
-    blocks=[Block("tag_command", tag_command), Block("pick_level", pick_level)],
+    blocks=[
+        Block("tag_command", tag_command),
+        Block("pick_level", pick_level),
+        Block("snapshot_gauge", snapshot_gauge),
+    ],
     hooks=[
         Hook(addr=0x1E102, expect="3d4002181d7c003c0a77", to_block="tag_command"),
         Hook(addr=0x1D548, expect="43fa55a6102e0224b0290001", to_block="pick_level"),
+        Hook(addr=0x1D7DE, expect="1d6e0224023f", to_block="snapshot_gauge"),
     ],
 )
