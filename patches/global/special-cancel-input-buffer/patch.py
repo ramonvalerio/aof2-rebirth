@@ -36,6 +36,20 @@
    o mesmo tipo de botão do último ataque ($235: soco após soco, chute após
    chute), como no original.
 
+6. Sem "sujeira" de buffer: o buffer de golpe ($274, acumulado em $1BFDE e
+   disparado quando o golpe termina) fica só para os golpes aéreos (buffer
+   de aterrissagem do item 5).
+   - especiais: o original acumulava SEMPRE ($1C076: $230 >= $40 -> $1C0A2);
+     agora sai sem acumular E descarta o comando pendente $218 a cada frame:
+     o leitor de comandos re-detectava o especial com o movimento ainda no
+     histórico e ele saía sozinho depois da recuperação
+   - hitstop de especial: o congelamento do impacto também acumulava
+     ($1CA66); em especiais que sobem (Kohou, Hien) o buffer disparava na
+     aterrissagem. Agora só acumula fora de especial
+   - normais de chão: saem da máscara $1C0BA (o original tinha
+     $20/$22/$28/$38, socos e chutes fracos de pé e agachado)
+   O special cancel usa o comando pendente ($218), não esse buffer.
+
 Leitura durante o hitstop: já é nativa (o estado de congelamento
 $41 = 2 chama o leitor de comandos em $1CA08); nada a alterar.
 """
@@ -92,8 +106,13 @@ STEP_WINDOW_BYTES = [
 ]
 
 LANDING_BUFFER_MASK = 0x1C0BA   # long por personagem: normais com buffer ($1C08A)
-AIR_NORMALS = 0x0C000C00        # bits $2A,$2B (socos aéreos) e $3A,$3B (chutes aéreos)
+AIR_NORMALS = 0x0C000C00        # bits $2A,$2B (socos aéreos) e $3A,$3B (chutes aéreos): única máscara
 ORIGINAL_BUFFER_MASKS = {c: 0x01000105 for c in range(1, 13)} | {13: 0x00000105}
+# Exceções por personagem (normais que mantêm o buffer do original):
+# Ryo ($62 = 1): chute fraco agachado ($38, bit 24), para os combos
+# baixo B -> baixo D e baixo B -> baixo B -> baixo D (SPEC-018).
+CROUCH_LK = 1 << (0x38 - 0x20)
+KEEP_BUFFER = {1: CROUCH_LK}
 
 CANCEL_EXEC = 0x1D808          # executa o especial pendente ($218)
 CANCEL_DONE = 0x1C0BA          # cancel aconteceu (addq #4,a7 / rts)
@@ -132,11 +151,42 @@ rearm_and_cancel = [
     JmpAbs(CANCEL_NONE),
 ]
 
+# Durante um especial ($230 >= $40) o original acumulava o buffer de botão
+# ($1C0A2). Agora: não acumula e descarta o comando de especial pendente
+# ($218), que o leitor de comandos re-detectava com o movimento ainda no
+# histórico e que saía sozinho depois da recuperação ("especial fantasma").
+during_special = [
+    Ins("0c6e00400230", "cmpi.w #$40, $230(a6)"),
+    Branch("bcc", "special"),
+    JmpAbs(0x1C07E),                                  # normal: segue o original
+    Label("special"),
+    Ins("426e0218", "clr.w $218(a6)"),
+    Ins("4e75", "rts"),                               # sai de $1C064 sem acumular
+]
+
+# Congelamento do impacto (hitstop, $1CA00) em estado de ataque: o original
+# acumulava o buffer de botão SEMPRE ($1CA66: jsr $1BFDE). Em especiais que
+# sobem e acertam várias vezes (Kohou, Hien) o buffer disparava na
+# aterrissagem ($1C39E). Agora só acumula se o golpe atual não é especial.
+hitstop_buffer = [
+    Ins("0c2e00030040", "cmpi.b #$3, $40(a6)"),      # (original) só no estado de ataque
+    Branch("bne", "skip"),
+    Ins("0c6e00400230", "cmpi.w #$40, $230(a6)"),
+    Branch("bcc", "skip"),
+    Ins("4eb90001bfde", "jsr $1bfde.l"),
+    Label("skip"),
+    Ins("4e75", "rts"),
+]
+
 PATCH = Patch(
     id="special-cancel-input-buffer",
     title="Special cancel global (chão e ar) e buffer de comandos de 12 frames",
     spec="src/backend/specs/SPEC-008-special-cancel-input-buffer.md",
-    blocks=[Block("rearm_and_cancel", rearm_and_cancel)],
+    blocks=[
+        Block("rearm_and_cancel", rearm_and_cancel),
+        Block("during_special", during_special),
+        Block("hitstop_buffer", hitstop_buffer),
+    ],
     hooks=[
         # $1C0B4: jsr $1d808(pc) / beq.b $1c0b2  -> jmp rearm_and_cancel
         Hook(addr=0x1C0B4, expect="4eba175267f8", to_block="rearm_and_cancel"),
@@ -144,12 +194,17 @@ PATCH = Patch(
         Hook(addr=0x1C06C, expect="661c", program=[Ins("4e71", "nop")]),
         # $1C074: bne.b $1c08a  ($60 bit 4: no ar) -> nop
         Hook(addr=0x1C074, expect="6614", program=[Ins("4e71", "nop")]),
+        # $1C076: cmpi.w #$40,$230(a6) / bcc.b $1c0a2  ->  jmp during_special
+        Hook(addr=0x1C076, expect="0c6e004002306424", to_block="during_special"),
+        # $1CA5E..$1CA69: cmpi.b #3,$40(a6) / bne $1ca6a / jsr $1bfde(pc)
+        # O rts em $1CA6A fica intacto: $1CA34 e $1CA64 desviam para ele.
+        Hook(addr=0x1CA5E, expect="0c2e000300406604" "4ebaf576", to_block="hitstop_buffer"),
     ],
     data=(
         [Data(CANCEL_FORBIDDEN_SPECIALS + c * 2, f"{m:04x}", "0000") for c, m in FORBIDDEN_SPECIALS]
         + [Data(CANCEL_FORBIDDEN_NORMALS + c * 4, f"{m:08x}", "00000000") for c, m in FORBIDDEN_NORMALS]
         + [Data(a, f"{OLD_STEP_WINDOW:02x}", f"{NEW_STEP_WINDOW:02x}") for a in STEP_WINDOW_BYTES]
-        + [Data(LANDING_BUFFER_MASK + c * 4, f"{m:08x}", f"{m | AIR_NORMALS:08x}")
+        + [Data(LANDING_BUFFER_MASK + c * 4, f"{m:08x}", f"{AIR_NORMALS | KEEP_BUFFER.get(c, 0):08x}")
            for c, m in ORIGINAL_BUFFER_MASKS.items()]
     ),
 )

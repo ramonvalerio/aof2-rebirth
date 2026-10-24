@@ -69,9 +69,30 @@ Prazos já maiores (15, 18, 20, 30) e prazos `0` não mudam.
 
 **Mecanismo original:** durante um golpe, o que é apertado é acumulado em `$274` (`$1BFE4`, via `$1C0A2`) e liberado **no frame da aterrissagem** (`$1C39E`: `$274 & $3030` → `$270`, seguido de `jsr $1D808`). Mas só acumula para os golpes marcados na máscara `$1C0BA + char*4` (bit = comando − `$20`). O original marcava só `$20`, `$22`, `$28` e `$38`. Os golpes aéreos não entravam: o botão apertado no ar era descartado.
 
-**Correção:** a máscara de todos os personagens ganha `$0C000C00` (comandos `$2A/$2B` socos aéreos e `$3A/$3B` chutes aéreos). Ex.: Ryo `$01000105` → `$0D000D05`.
+**Correção:** a máscara de todos os personagens ganha `$0C000C00` (comandos `$2A/$2B` socos aéreos e `$3A/$3B` chutes aéreos). Depois, os normais de chão saíram da máscara (ver "Sem sujeira de buffer"): ela ficou só `$0C000C00`.
 
 **Limite (original):** depois do acúmulo, `$1C0A6` filtra pelo tipo do último ataque (`$235`): só soco depois de soco, ou chute depois de chute.
+
+## Sem "sujeira" de buffer depois dos golpes
+
+**Sintoma:** um botão apertado durante a animação de alguns golpes saía sozinho quando o golpe terminava.
+
+**Causa:** o buffer de golpe (`$274`, acumulado em `$1BFDE` pela janela de ataque `$1C064`) dispara no fim do golpe o que foi apertado durante ele:
+- **especiais:** `$1C076` (`$230 ≥ $40`) desviava **sempre** para o acúmulo (`$1C0A2`);
+- **normais da máscara `$1C0BA`:** o original tinha socos e chutes fracos de pé e agachado (`$20`, `$22`, `$28`, `$38`).
+
+**Correção:**
+
+| Alteração | Onde | Original | Novo |
+|---|---|---|---|
+| Especial: não acumula e descarta o comando pendente | `$1C076` (+ bloco `during_special`) | `cmpi.w #$40,$230(a6)` / `bcc.b $1C0A2` | `jmp` bloco: se `$230 ≥ $40`, `clr.w $218(a6)` e sai; senão, segue em `$1C07E` |
+| Máscara de buffer | `$1C0BA + char*4` | `$01000105` (+ aéreos) | **`$0C000C00`**: só os golpes aéreos (buffer de aterrissagem). Exceção: Ryo `$0D000C00` (baixo B, SPEC-018) |
+
+**Especial "fantasma" (2ª causa):** durante a animação de um especial, o leitor de comandos continua rodando. Um botão apertado nesse tempo, com o movimento do especial ainda no histórico (prazo de 12 frames por passo), faz o jogo **reconhecer o comando de novo** e guardá-lo em `$218` por 60 frames (`$A77`). O neutro executa esse comando depois da recuperação (`$1D82A`). Correção: enquanto o golpe atual é especial, o `$218` é zerado a cada frame. Cancelar especial em especial já não era permitido, então nada útil se perde.
+
+**Hitstop de especial (3ª causa):** no congelamento do impacto (`$1CA00`), em estado de ataque, o original acumulava o buffer de botão **sempre** (`$1CA66`: `jsr $1BFDE`). Em especiais que sobem e acertam várias vezes (Kohou forte, Hien Shippuukyaku forte), o buffer disparava **na aterrissagem** (`$1C39E`). Correção: hook em `$1CA5E–$1CA69` (o `rts` de `$1CA6A` fica intacto, porque `$1CA34` e `$1CA64` desviam para ele); só acumula se o golpe atual não é especial.
+
+O special cancel (normal → especial) continua igual: o comando é guardado durante o golpe normal.
 
 ## Item 3: pushback (não implementado)
 
@@ -98,6 +119,9 @@ Prazos já maiores (15, 18, 20, 30) e prazos `0` não mudam.
 - [ ] Soco forte perto → Kohou fraco (cancel) acerta (caixa rearmada)
 - [ ] Pulo com C, apertando C de novo antes de cair: o soco forte sai no frame da aterrissagem
 - [ ] Golpe normal forte não derruba (só com o oponente tonto/dizzy)
+- [ ] Botão apertado durante um especial ou um golpe de chão não sai sozinho depois
+- [ ] Kohou forte e Hien Shippuukyaku forte: nada sai sozinho na aterrissagem
+- [ ] Pulo com C → C apertado no ar ainda sai na aterrissagem
 
 ## Medição (2026-10-23, `frame_data.lua`, Ryo)
 

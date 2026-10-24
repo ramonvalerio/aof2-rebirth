@@ -56,6 +56,14 @@ Passando direto da direção oposta para o dash, `$68` nunca zera: o estado 0 n�
 
 `$213` continua sendo a direção que o estado de dash (`$1BCD6`) compara. A contagem do prazo só avança quando o detector é chamado (neutro, andando, agachado), como no original.
 
+## Dash cancelado por outro dash
+
+**Comportamento:** durante um dash para frente, ← ← cancela no dash para trás, e vice-versa.
+
+**Causa (original):** no estado de dash (`$1BCAC`/`$1BCE4`), segurar outra direção encerra o dash (`$1BCD6`/`$1BD0E` → `$1BD1C`, comando 1). Mas o detector de dois toques só roda no neutro, andando e agachado: o 1º toque da direção nova se perdia, e era preciso um 3º toque.
+
+**Correção:** hooks em `$1BCD6` e `$1BD0E` (`cmp.b $213,d0` / `bne.w $1BD1C`). Se a direção segurada mudou e é só ← ou → (sem cima/baixo), o toque é registrado como **1º toque pendente** (`$213` = direção, `$212 = 1`, `$210 = 16`) antes de encerrar o dash. O 2º toque, já no neutro, dispara o dash novo. Diagonais só encerram, como antes.
+
 ## Pendências / riscos
 
 - **Visual:** a pose de arranque e a de frenagem aparecem por 1 frame.
@@ -71,3 +79,4 @@ Passando direto da direção oposta para o dash, `$68` nunca zera: o estado 0 n�
 - [ ] Segurando ←, fazer → →: o dash para frente sai (e o inverso para o dash para trás)
 - [ ] Dash com um botão segurado
 - [ ] Meia-lua (↓↘→) repetida não dispara dash
+- [ ] Dash para frente → ← ← → dash para trás (e o inverso)

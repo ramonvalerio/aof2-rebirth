@@ -12,7 +12,7 @@
 | B | Chute fraco |
 | C | Soco forte |
 | D | Chute forte |
-| A + C | Arremesso (throw), se estiver perto |
+| A + C | Arremesso (throw), se estiver perto. Sem direção: em pé (neutro) ou agachado |
 | A + D | Uppercut (no original: A + C) |
 | B + D | Chute baixo (no original: B + C) |
 | START | Provocação (taunt) (no original: D) |
@@ -61,6 +61,12 @@ Saída do tradutor:
 | `$271` | 4 / 5 | O soco / chute é forte |
 | `$271` | 6 | Pedido de arremesso |
 | `$271` | 7 | Pedido de provocação |
+
+## Arremesso sem direção
+
+O original só arremessava segurando ← ou →: `$1DABE` testa o input bruto (`$68 & $0C`) e sai em `$1DAD4` (`beq.b $1DAF2`) sem direção. O lado do arremesso é decidido pela **posição** dos jogadores (`$1DB10`), não pela direção, e o alcance pelo `$A68` bit 0. O patch troca esse `beq` por `nop`: A+C perto arremessa no neutro.
+
+**Agachado:** o alcance (`$A68` bit 0) é ligado em `$21F7E`, mas só se `$60 & $F0` do arremessador for zero (`$21F66`). O bit 5 de `$60` é "agachado", então agachado nunca ficava no alcance. A máscara passa para `$D0` (byte `$21F69`), e o arremesso sai agachado também. Os bits 4 (no ar), 6 e 7 continuam bloqueando.
 
 ## Algoritmo novo
 

@@ -11,18 +11,22 @@ Mecanismo original:
     de objetos ($06C0), que zera $5B em $074A
 
 Patch: em $074A, se o objeto é o sprite de um jogador (slot apontado pelo
-byte $3 do P1/P2) e a luta já está em andamento (algum jogador já venceu um
-round: -$190 do jogador, word, +1 no vencedor em $A9BA), o $5B NÃO é
-zerado. No 1º round (0 x 0) zera como antes, então cada luta nova começa
-com o rosto limpo. ($25A, o "BEAT BY", não serve: é a sequência de
-adversários vencidos no arcade, não o placar da luta.)
+byte $3 do P1/P2) e não é o 1º round da luta ($402(a5) != 0), o $5B NÃO é
+zerado. No 1º round zera como antes: cada luta nova começa com o rosto limpo.
+
+Por que $402: a preparação do round ($A324) recria os sprites ($A498) ANTES
+de zerar as vitórias de round, e usa justamente $402 == 0 para saber que é
+o 1º round. ($402 é zerado no fim da luta em $19A52/$19A70/$19AB6.)
+Critérios descartados: $25A ("BEAT BY" = adversários vencidos no arcade) e
+as vitórias de round (-$190 do jogador): na luta nova, ainda valem os da
+luta anterior no momento em que o sprite é recriado.
 """
 from asm68k import Branch, Ins, JmpAbs, Label
 from patchlib import Block, Hook, Patch
 
 P1, P2 = 0x109280, 0x109380
 SPRITE_SLOT = 0x3          # byte do jogador: slot do objeto de sprite
-ROUND_WINS = -0x190        # vitórias de ROUND na luta atual (word; +1 em $A9BA)
+ROUND_NUMBER = 0x402       # a5: nº do round na luta (0 no 1º round; zerado no fim da luta)
 AFTER = 0x752              # move.b d0,$5d(a0) (continua a inicialização)
 
 # Substitui: move.b d0,$5b(a0) / move.b d0,$5c(a0)  em $074A (d0 = 0)
@@ -42,9 +46,7 @@ keep_bruise = [
     Ins("b1c9", "cmpa.l a1, a0"),
     Branch("bne", "clear"),
     Label("player"),
-    Ins(f"4a79{P1 + ROUND_WINS:08x}", f"tst.w ${P1 + ROUND_WINS:x}.l"),
-    Branch("bne", "keep"),
-    Ins(f"4a79{P2 + ROUND_WINS:08x}", f"tst.w ${P2 + ROUND_WINS:x}.l"),
+    Ins(f"4a6d{ROUND_NUMBER:04x}", f"tst.w ${ROUND_NUMBER:x}(a5)"),
     Branch("bne", "keep"),
     Label("clear"),
     Ins("4cdf0302", "movem.l (a7)+, d1/a0-a1"),

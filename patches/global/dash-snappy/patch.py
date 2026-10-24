@@ -23,8 +23,16 @@ O novo usa as bordas de aperto ($69), que já implicam ter soltado antes:
   - 2º toque na mesma direção dentro do prazo = dash (d0 = 1, como antes)
   - diagonal, outra direção ou fim do prazo = recomeça
 $212 = pendente, $213 = direção (lida pelo estado de dash), $210 = prazo.
+
+Dash cancelado por outro dash (frente <-> trás): no estado de dash
+($1BCAC frente, $1BCE4 trás), trocar a direção encerra o dash (comando 1),
+mas o detector não roda nesse estado e o 1º toque da direção nova se
+perdia. Os hooks em $1BCD6/$1BD0E (cmp.b $213,d0 / bne.w $1BD1C), quando
+a direção nova é só <- ou -> (sem cima/baixo), registram esse toque como
+1º toque pendente antes de encerrar. O 2º toque, já no neutro, dispara o
+dash na direção nova.
 """
-from asm68k import Branch, Ins, Label
+from asm68k import Branch, Ins, JmpAbs, Label
 from patchlib import Block, Data, Hook, Patch
 
 TAP_WINDOW = 16   # frames entre o 1º e o 2º toque (como o original)
@@ -129,11 +137,41 @@ STOP_FRAMES = [
     (0x05EC9A, 0x84, 0x81),  # Geese frente anim 704 q6
 ]
 
+
+def redirect(continue_at):
+    """Substitui: cmp.b $213(a6),d0 / bne.w $1BD1C (d0 = direções seguradas)."""
+    return [
+        Ins("b02e0213", "cmp.b $213(a6), d0"),
+        Branch("beq", "same"),
+        Ins("0c000004", "cmpi.b #$4, d0"),            # só <-
+        Branch("beq", "tap"),
+        Ins("0c000008", "cmpi.b #$8, d0"),            # só ->
+        Branch("bne", "end"),
+        Label("tap"),
+        Ins("1d400213", "move.b d0, $213(a6)"),       # 1º toque da direção nova
+        Ins("1d7c00010212", "move.b #$1, $212(a6)"),
+        Ins(f"3d7c{TAP_WINDOW:04x}0210", f"move.w #${TAP_WINDOW:x}, $210(a6)"),
+        Label("end"),
+        JmpAbs(0x1BD1C),                              # encerra o dash (comando 1)
+        Label("same"),
+        JmpAbs(continue_at),
+    ]
+
+
 PATCH = Patch(
     id="dash-snappy",
     title="Dash ágil: sem quadros parados e dois toques sem precisar passar pelo neutro",
     spec="src/backend/specs/SPEC-011-dash-snappy.md",
-    blocks=[Block("double_tap", double_tap)],
-    hooks=[Hook(addr=0x1CCDA, expect="7000102e0212", to_block="double_tap")],
+    blocks=[
+        Block("double_tap", double_tap),
+        Block("dash_fwd_redirect", redirect(0x1BCDE)),
+        Block("dash_back_redirect", redirect(0x1BD16)),
+    ],
+    hooks=[
+        Hook(addr=0x1CCDA, expect="7000102e0212", to_block="double_tap"),
+        # $1BCD6 / $1BD0E: cmp.b $213(a6),d0 / bne.w $1bd1c
+        Hook(addr=0x1BCD6, expect="b02e021366000040", to_block="dash_fwd_redirect"),
+        Hook(addr=0x1BD0E, expect="b02e021366000008", to_block="dash_back_redirect"),
+    ],
     data=[Data(addr, f"{old:02x}", f"{new:02x}") for addr, old, new in STOP_FRAMES],
 )

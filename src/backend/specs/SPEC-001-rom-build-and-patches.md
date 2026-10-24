@@ -50,6 +50,8 @@ Assembly: cada instrução é escrita como encoding hex + texto de desmontagem e
 5. O código gerado desmonta (capstone) exatamente no texto declarado.
 6. A saída é determinística: mesmas entradas geram o mesmo zip.
 
+Verificação extra (manual, ~1 min): `python tools/hook_check.py` confirma que nenhum desvio do jogo (`bcc`/`bra`/`bsr`/`jmp`/`jsr`) aponta para o **meio** de um hook, o que faria o processador executar lixo. Rodar sempre que um hook novo for criado.
+
 ## Regras de modularidade
 
 - Um patch = uma alteração de comportamento, com sua própria spec.

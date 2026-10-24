@@ -19,7 +19,7 @@ Os bytes $272/$273 do jogador (antes, timers de A/B) passam a ser:
   $272 = botões pendentes (bits 4-7)   $273 = frames restantes da janela
 """
 from asm68k import Branch, Ins, JmpAbs, Label
-from patchlib import Block, Hook, Patch
+from patchlib import Block, Data, Hook, Patch
 
 # Frames extras de espera por um segundo botão (A+C / A+D / B+D) depois do primeiro.
 PAIR_WINDOW = 2
@@ -116,5 +116,15 @@ PATCH = Patch(
         # ataque ($235, sem marca de forte) = soco fraco "fantasma". Anulado.
         Hook(addr=0x1D8E2, expect="832e0270",
              program=[Ins("4e71", "nop"), Ins("4e71", "nop")]),
+        # $1DAD4: beq.b $1daf2 — o arremesso ($1DABE) exigia <- ou -> no
+        # input bruto ($68 & $0C). O lado do arremesso vem da posição
+        # ($1DB10), não da direção: A+C perto basta, em pé ou agachado.
+        Hook(addr=0x1DAD4, expect="671c", program=[Ins("4e71", "nop")]),
+    ],
+    data=[
+        # $21F66: move.b #$f0,d0 / and.b $60(a2),d0 / bne — o alcance de
+        # arremesso ($A68 bit 0) só liga com os bits 4-7 de $60 zerados; o
+        # bit 5 é "agachado". Máscara $D0: arremessa agachado também.
+        Data(0x21F69, "f0", "d0"),
     ],
 )

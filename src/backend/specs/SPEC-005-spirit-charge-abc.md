@@ -11,7 +11,7 @@
 | Segurar A, **ou** B, **ou** C (sem direção) | Carrega a barra de espírito | Não carrega |
 | Segurar A **+** B **+** C juntos (sem direção) | Carrega | Carrega |
 
-O resto da mecânica não muda: são 20 frames na condição para começar a carregar, a carga continua enquanto a condição vale, e direção ou D não contam.
+A carga começa **no 1º frame** com A+B+C segurados (no original, depois de 20 frames). Ela continua enquanto a condição vale; direção ou D não contam.
 
 ## Mapa de engenharia reversa
 
@@ -26,10 +26,14 @@ O resto da mecânica não muda: são 20 frames na condição para começar a car
 
 A rotina `$1B9FE` é reescrita no lugar (24 bytes, sem bloco novo). Ela passa a exigir `($68 & $7F) == $70`: A, B e C segurados e nenhuma direção.
 
+## Início instantâneo
+
+`$1BA2C` soma 1 em `$23E` a cada frame na condição, e `$1BA30` (`cmpi.b #$14,$23E` / `bcs`) só inicia a carga com 20. O limite passa para **1** (byte `$1BA33`).
+
 ## Interação com a SPEC-002 (pendência)
 
 No patch de controles, A+C é o arremesso. Ao apertar A+B+C, o tradutor de input vê o par A+C e gera o pedido de arremesso:
-- **longe do oponente:** o pedido é ignorado e, depois de 20 frames segurando, a barra carrega normalmente;
+- **longe do oponente:** o pedido é ignorado e a barra carrega normalmente;
 - **perto do oponente:** sai o arremesso em vez de começar a carga.
 
 Possível ajuste (a decidir): no tradutor da SPEC-002, tratar A+B+C como "sem evento", com o custo de mais latência no arremesso.

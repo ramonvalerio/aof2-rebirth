@@ -10,13 +10,18 @@
     "dash-snappy",
     "no-knockdown-normals",
     "hit-counter",
-    "persistent-bruises"
+    "persistent-bruises",
+    "rush-specials-true-combo"
   ],
   "characters": {
     "ryo": [
       "air-fireball-forward-jump",
       "kououken-weak-startup",
-      "kohou-weak-short"
+      "kohou-weak-short",
+      "overhead-kick",
+      "renbuken-juggle",
+      "normal-chains",
+      "jump-punch-hitstun"
     ]
   }
 }
