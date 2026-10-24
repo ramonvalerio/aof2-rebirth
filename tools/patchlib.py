@@ -39,10 +39,23 @@ class Hook:
 
 
 @dataclass
+class DataBlock:
+    """Dados novos (tabelas, animações) alocados pelo build no espaço livre.
+
+    `build(org)` devolve os bytes já ajustados para o endereço `org`
+    (para dados com offsets relativos). Não passa pela verificação de
+    desmontagem, que vale só para código.
+    """
+    name: str
+    size: int
+    build: object  # callable(org) -> bytes
+
+
+@dataclass
 class Data:
     addr: int     # endereço 68k
     expect: str   # bytes originais em hex
-    new: str      # bytes novos em hex (mesmo tamanho)
+    new: object   # bytes novos em hex (mesmo tamanho), ou callable(block_addrs) -> hex
 
 
 @dataclass
@@ -55,4 +68,5 @@ class Patch:
     data: list = field(default_factory=list)
 
     def block_sizes(self):
-        return {b.name: size_of(b.program) for b in self.blocks}
+        return {b.name: (b.size if isinstance(b, DataBlock) else size_of(b.program))
+                for b in self.blocks}

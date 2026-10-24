@@ -36,9 +36,10 @@ Cada `patch.py` (global ou de personagem, ver [ADR-0005](../adr/ADR-0005-global-
 - `spec`: caminho da spec que define o comportamento.
 - `blocks`: rotinas novas. O build escolhe o endereço; o patch não fixa endereço de código novo.
 - `hooks`: sobrescritas de código na ROM original. Cada hook declara `expect`, os bytes originais naquele endereço. O espaço que sobrar é preenchido com `NOP`.
-- `data`: alterações de tabelas, sem código (`Data(addr, expect, new)`). Também declaram os bytes originais e não podem mudar de tamanho.
+- `data`: alterações de tabelas, sem código (`Data(addr, expect, new)`). Também declaram os bytes originais e não podem mudar de tamanho. `new` pode ser uma função dos endereços dos blocos (para ponteiros).
+- `DataBlock(name, size, build)`: dados novos (ex.: animações) alocados no espaço livre; `build(org)` gera os bytes para o endereço escolhido.
 
-Assembly: cada instrução é escrita como encoding hex + texto de desmontagem esperado (`tools/asm68k.py`). Os desvios curtos e o `JMP` absoluto usam rótulos.
+Assembly: cada instrução é escrita como encoding hex + texto de desmontagem esperado (`tools/asm68k.py`), conferido instrução por instrução. Os desvios curtos, o `JMP` absoluto e o `LEA rótulo(PC)` usam rótulos. Dados dentro de um bloco (ex.: registros de texto) usam `Raw`.
 
 ## Regras que o build garante (falha = build abortado)
 

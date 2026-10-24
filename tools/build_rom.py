@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from asm68k import assemble  # noqa: E402
+from patchlib import DataBlock  # noqa: E402
 
 SRC_ZIP = ROOT / "rom" / "aof2.zip"
 OUT_ZIP = ROOT / "rom" / "aof2r.zip"
@@ -110,7 +111,9 @@ def build(patch_ids, out_zip=OUT_ZIP, log=print):
 
         for b in p.blocks:
             org = addrs[b.name]
-            code = assemble(b.program, org)
+            code = b.build(org) if isinstance(b, DataBlock) else assemble(b.program, org)
+            if len(code) != p.block_sizes()[b.name]:
+                raise BuildError(f"{p.id}: bloco {b.name} com tamanho diferente do declarado")
             if any(rom[org:org + len(code)]):
                 raise BuildError(f"{p.id}: região ${org:x} não está livre")
             write(org, code, p.id)
@@ -124,7 +127,8 @@ def build(patch_ids, out_zip=OUT_ZIP, log=print):
             log(f"  {p.id}: hook @ ${h.addr:06x}")
 
         for e in p.data:
-            expect, new = bytes.fromhex(e.expect), bytes.fromhex(e.new)
+            new_hex = e.new(addrs) if callable(e.new) else e.new
+            expect, new = bytes.fromhex(e.expect), bytes.fromhex(new_hex)
             if len(expect) != len(new):
                 raise BuildError(f"{p.id}: dado em ${e.addr:06x} muda de tamanho")
             if bytes(rom[e.addr:e.addr + len(expect)]) != expect:

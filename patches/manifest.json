@@ -5,11 +5,17 @@
     "controls-4button-layout",
     "free-special-moves",
     "special-strength-by-button",
-    "spirit-charge-abc"
+    "spirit-charge-abc",
+    "special-cancel-input-buffer",
+    "dash-snappy",
+    "no-knockdown-normals",
+    "hit-counter"
   ],
   "characters": {
     "ryo": [
-      "air-fireball-forward-jump"
+      "air-fireball-forward-jump",
+      "kououken-weak-startup",
+      "kohou-weak-short"
     ]
   }
 }

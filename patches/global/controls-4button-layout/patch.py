@@ -11,6 +11,10 @@ Substitui a rotina original $1D87C, que traduz o input bruto do jogador
   $271 bit7      = D pressionado (provocação em $1DA28)
 No original a força vinha de quanto tempo A/B ficavam segurados (8 frames).
 
+C original "repete o último ataque" ($1D896): ao soltar o C, $1D8E2 fazia
+or.b $235,$270 (soco/chute sem marca de forte). No layout novo isso virava
+um soco fraco espontâneo; o "or" vira NOP.
+
 Os bytes $272/$273 do jogador (antes, timers de A/B) passam a ser:
   $272 = botões pendentes (bits 4-7)   $273 = frames restantes da janela
 """
@@ -108,5 +112,9 @@ PATCH = Patch(
     hooks=[
         # move.w $68(a6),d0 / andi.w #$cfcf,d0  ->  jmp translate_input
         Hook(addr=0x1D87C, expect="302e00680240cfcf", to_block="translate_input"),
+        # $1D8E2: or.b d1,$270(a6) — ao soltar o C, o original repetia o último
+        # ataque ($235, sem marca de forte) = soco fraco "fantasma". Anulado.
+        Hook(addr=0x1D8E2, expect="832e0270",
+             program=[Ins("4e71", "nop"), Ins("4e71", "nop")]),
     ],
 )

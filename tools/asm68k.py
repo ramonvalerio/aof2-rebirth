@@ -34,9 +34,20 @@ class Ins:
 
 
 @dataclass
+class Raw:
+    hex: str   # dados (ex.: registros de texto); não passam pela desmontagem
+
+
+@dataclass
 class Branch:
     cond: str   # chave de _BRANCH
     target: str  # nome do rótulo
+
+
+@dataclass
+class LeaPc:
+    target: str  # rótulo
+    reg: int     # registrador de endereço (a0-a7)
 
 
 @dataclass
@@ -53,6 +64,10 @@ def _size(item):
         return 2
     if isinstance(item, JmpAbs):
         return 6
+    if isinstance(item, Raw):
+        return len(bytes.fromhex(item.hex))
+    if isinstance(item, LeaPc):
+        return 4
     raise TypeError(item)
 
 
@@ -84,6 +99,14 @@ def assemble(program, origin):
         elif isinstance(item, JmpAbs):
             b = bytes.fromhex("4ef9") + item.addr.to_bytes(4, "big")
             expected.append((pc, f"jmp ${item.addr:x}.l"))
+        elif isinstance(item, Raw):
+            b = bytes.fromhex(item.hex)
+        elif isinstance(item, LeaPc):
+            disp = labels[item.target] - (pc + 2)
+            if not -0x8000 <= disp <= 0x7FFF:
+                raise ValueError(f"lea fora de alcance: {item.target}")
+            b = (0x41FA | item.reg << 9).to_bytes(2, "big") + (disp & 0xFFFF).to_bytes(2, "big")
+            expected.append((pc, f"lea.l ${labels[item.target]:x}(pc), a{item.reg}"))
         else:
             continue
         out += b
@@ -93,17 +116,26 @@ def assemble(program, origin):
     return bytes(out)
 
 
+def label_addr(program, origin, name):
+    """Endereço de um rótulo do programa montado em `origin`."""
+    pc = origin
+    for item in program:
+        if isinstance(item, Label) and item.name == name:
+            return pc
+        pc += _size(item)
+    raise KeyError(name)
+
+
 def disasm(code, origin):
     return [(i.address, f"{i.mnemonic} {i.op_str}".strip(), i.size) for i in _md.disasm(code, origin)]
 
 
 def verify(code, origin, expected):
-    got = disasm(code, origin)
-    if sum(s for _, _, s in got) != len(code):
-        raise ValueError(f"código em ${origin:x} não desmonta por completo")
+    """Confere cada instrução isoladamente (dados `Raw` ficam de fora)."""
     norm = lambda s: " ".join(s.lower().split())
-    for (addr, text), (gaddr, gtext, _) in zip(expected, got):
-        if addr != gaddr or norm(text) != norm(gtext):
-            raise ValueError(f"${addr:06x}: esperado '{text}', capstone leu '{gtext}' em ${gaddr:06x}")
-    if len(expected) != len(got):
-        raise ValueError(f"código em ${origin:x}: número de instruções diverge")
+    for addr, text in expected:
+        off = addr - origin
+        got = next(_md.disasm(code[off:off + 10], addr), None)
+        if got is None or norm(text) != norm(f"{got.mnemonic} {got.op_str}"):
+            seen = f"{got.mnemonic} {got.op_str}" if got else "nada"
+            raise ValueError(f"${addr:06x}: esperado '{text}', capstone leu '{seen}'")

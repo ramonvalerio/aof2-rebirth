@@ -112,3 +112,11 @@ Latência: um golpe isolado sai 2 frames depois do aperto. No original, o golpe 
 ## Revisão (2026-10-23): arremesso em A+C
 
 O arremesso passou de A+B para A+C. A+B deixa de ser combinação e sai como botões isolados (o soco tem prioridade sobre o chute). Note que A+C era o uppercut no jogo original; aqui o uppercut continua em A+D.
+
+## Correção (2026-10-23): soco fraco "fantasma" ao usar o C
+
+**Sintoma:** apertando só o C, às vezes saía soco fraco, sobretudo ao segurar o C do pulo até a aterrissagem.
+
+**Causa:** a função original "C repete o último ataque" (`$1D896`, chamada no neutro por `$1D842`). Ela conta quanto tempo o C (bruto, `$68` bit 6) fica segurado e, ao soltar, faz `or.b $235,$270` (`$1D8E2`): injeta o tipo do último ataque (`$235`, ex.: `$10` = soco) **sem** a marca de forte em `$271`. O resultado é um soco fraco.
+
+**Correção:** `$1D8E2` (`or.b d1,$270(a6)`) vira 2× `nop`. O C continua sendo só o soco forte, pelo tradutor.
