@@ -34,7 +34,7 @@ Histórico: a primeira versão usava C + D para a provocação. Isso foi revisto
 
 ## Mapa de engenharia reversa
 
-`a5 = $108000`. `a6` aponta para o jogador (P1 `$109080`, P2 `$109180`).
+`a5 = $108000`. `a6` aponta para o jogador: P1 `$109280`, P2 `$109380`. O objeto de input fica em `$109080`/`$109180` e é copiado para o jogador em `$1A976`.
 
 | Endereço | O que é |
 |---|---|

@@ -8,10 +8,10 @@ os.execute('mkdir "' .. out_dir .. '" 2>nul')
 local log_path = out_dir .. "input-log.csv"
 local log = assert(io.open(log_path, "w"))
 
--- Endereços (ver SPEC-002). P1 em $109080, P2 em $109180.
+-- Endereços (ver SPEC-002). Jogador: P1 em $109280, P2 em $109380 (objeto de input em $109080/$109180).
 local PLAYERS = {
-  { name = "P1", base = 0x109080 },
-  { name = "P2", base = 0x109180 },
+  { name = "P1", base = 0x109280 },
+  { name = "P2", base = 0x109380 },
 }
 local HOOK_ADDR = 0x1D87C        -- rotina original de input (patch: jmp)
 local PATCH_ADDR = 0x0FE000      -- rotina nova do patch
