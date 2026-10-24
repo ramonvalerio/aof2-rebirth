@@ -9,7 +9,8 @@
     "special-cancel-input-buffer",
     "dash-snappy",
     "no-knockdown-normals",
-    "hit-counter"
+    "hit-counter",
+    "persistent-bruises"
   ],
   "characters": {
     "ryo": [

@@ -5,7 +5,7 @@
 
 ## Comportamento desejado
 
-Como no Super Street Fighter II Turbo, a partir do 2º acerto seguido aparece "**2 HITS**", "**3 HITS**"... do lado de quem faz o combo, com a **fonte do HUD do próprio jogo** (a do "BEAT BY 0"). O texto some cerca de 1,5 s (90 frames) depois do último acerto.
+Como no Super Street Fighter II Turbo, a partir do 2º acerto seguido aparece "**2 HIT COMBO**", "**3 HIT COMBO**"... do lado de quem faz o combo, com a **fonte do HUD do próprio jogo** (a do "BEAT BY 0"). O texto some cerca de 1,5 s (90 frames) depois do último acerto.
 
 ## Regras do combo
 
@@ -14,7 +14,7 @@ Como no Super Street Fighter II Turbo, a partir do 2º acerto seguido aparece "*
 | Vida do oponente cai e não foi defesa | +1 (ou começa em 1, sem combo ativo) |
 | Defesa (`$7C & $F == 3`, o mesmo teste de `$21872`) | não conta |
 | Reação do oponente chega ao quadro final (`$A69` bit 7) | combo acaba |
-| Contador ≥ 2 | mostra "`NN` HITS" (máx. 99) |
+| Contador ≥ 2 | mostra "`NN` HIT COMBO" (máx. 99) |
 
 ## Mapa de engenharia reversa: texto na tela
 
@@ -45,9 +45,11 @@ Fonte do HUD: parâmetro `$2D` = paleta 2, tiles `$D00 + c` (topo) e `$E00 + c` 
 
 | Registro | Posição | Conteúdo |
 |---|---|---|
-| P1 mostrar | número `$7048` (col. 2, lin. 8), texto `$7088` | `NN` + " HITS" |
-| P2 mostrar | número `$73C8` (col. 30, lin. 8), texto `$7408` | `NN` + " HITS" |
-| Apagar | mesma posição | 7 espaços |
+| P1 mostrar | número `$7048` (col. 2, lin. 8), texto `$7088` (col. 4) | `NN` + " HIT COMBO" (colunas 2–13) |
+| P2 mostrar | número `$7348` (col. 26, lin. 8), texto `$7388` (col. 28) | `NN` + " HIT COMBO" (colunas 26–37) |
+| Apagar | mesma posição | 12 espaços |
+
+O cmd 8 realinha o registro para endereço par depois do `$FF` (`$11D6`). Strings de tamanho ímpar (com o `$FF`) levam 1 byte de enchimento antes do `00 00` final (`string2()` no patch).
 
 ## Correção (2026-10-24): reinício ao apertar start na tela de título
 
@@ -69,11 +71,11 @@ Fonte do HUD: parâmetro `$2D` = paleta 2, tiles `$D00 + c` (topo) e `$E00 + c` 
 
 - **RAM:** os offsets `$3A0–$3A7` do registro do jogador não são usados por nenhum código conhecido e não mudaram na medição. O contador só escreve com a luta montada (os dois ponteiros validados).
 - **Defesa com dano:** golpes que tiram vida na defesa não contam (teste de defesa), mas também não quebram um combo ativo.
-- **Posição:** linha 8, logo abaixo do "BEAT BY". Ajustável em `POS`.
+- **Posição:** linha 8, logo abaixo do "BEAT BY"; P2 alinhado para terminar na coluna 37. Ajustável em `POS`/`ROW`, e o texto em `LABEL`.
 
 ## Critérios de aceite
 
-- [ ] Combo de 2+ acertos: aparece "2 HITS", "3 HITS"... do lado de quem atacou, na fonte do HUD
+- [ ] Combo de 2+ acertos: aparece "2 HIT COMBO", "3 HIT COMBO"... do lado de quem atacou, na fonte do HUD
 - [ ] Acerto isolado: nada aparece
 - [ ] O texto some ~1,5 s depois do último acerto
 - [ ] Combo do P2 aparece do lado direito

@@ -1,13 +1,13 @@
 """hit-counter — SPEC-013.
 
-Contador de combo na tela ("2 HITS", "3 HITS"...), com a fonte do HUD do
+Contador de combo na tela ("2 HIT COMBO", "3 HIT COMBO"...), com a fonte do HUD do
 jogo (a do "BEAT BY 0").
 
 Por jogador, a cada frame (hook na atualização do jogador, $1B6A0):
   - reação do oponente chegou ao quadro final ($A69 bit 7) -> combo acabou
   - vida do oponente ($6C) caiu e não foi defesa ($7C & $F != 3, o mesmo
     teste de $21872) -> +1 no contador (BCD); começa em 1 se não havia combo
-  - a partir de 2 hits: enfileira o registro "NN HITS" e arma 90 frames
+  - a partir de 2 hits: enfileira o registro "NN HIT COMBO" e arma 90 frames
   - fim do timer: enfileira um registro de espaços (apaga)
 
 Texto: fila de tarefas do VBlank (-$5F8(a5), trava -$5F4(a5), executor
@@ -36,9 +36,19 @@ SHOW_FRAMES = 90
 AFTER_HOOK = 0x1B6A8
 
 TILE = "2d"                               # paleta 2, fonte do HUD
-POS = {  # endereço na camada fixa: $7000 + coluna*$20 + linha
-    "p1": {"num": 0x7048, "txt": 0x7088},   # coluna 2/4, linha 8
-    "p2": {"num": 0x73C8, "txt": 0x7408},   # coluna 30/32, linha 8
+LABEL = " HIT COMBO"                      # texto depois do número ("2 HIT COMBO")
+WIDTH = 2 + len(LABEL)                    # colunas ocupadas (2 dígitos + texto)
+ROW = 8
+
+
+def fix_addr(col, row=ROW):
+    """Endereço na camada fixa: $7000 + coluna*$20 + linha."""
+    return 0x7000 + col * 0x20 + row
+
+
+POS = {  # coluna do número; o texto começa 2 colunas depois
+    "p1": 2,                              # colunas 2-13
+    "p2": 38 - WIDTH,                     # termina na coluna 37 (borda visível)
 }
 
 
@@ -46,19 +56,26 @@ def text(s):
     return s.encode("ascii").hex()
 
 
+def string2(s):
+    """Cmd 8 (2 linhas) + string + $FF, com 1 byte de enchimento se preciso:
+    o handler ($11D6) realinha o registro para endereço par depois do $FF."""
+    body = f"{TILE}08" + text(s) + "ff"
+    return body + ("00" if (len(s) + 1) % 2 else "")
+
+
 def show_record(side, ram_off):
-    p = POS[side]
+    col = POS[side]
     return Raw(
-        "2002"                                                # VRAMMOD = $20
-        + f"c110{p['num']:04x}{ram_off:04x}{TILE}00"           # número BCD
-        + f"0003{p['txt']:04x}"                                # posição do texto
-        + f"{TILE}08" + text(" HITS") + "ff"                   # " HITS"
-        + "0000"                                               # fim
+        "2002"                                                       # VRAMMOD = $20
+        + f"c110{fix_addr(col):04x}{ram_off:04x}{TILE}00"            # número BCD
+        + f"0003{fix_addr(col + 2):04x}"                             # posição do texto
+        + string2(LABEL)
+        + "0000"                                                     # fim
     )
 
 
 def clear_record(side):
-    return Raw("2002" + f"0003{POS[side]['num']:04x}" + f"{TILE}08" + text(" " * 7) + "ff" + "0000")
+    return Raw("2002" + f"0003{fix_addr(POS[side]):04x}" + string2(" " * WIDTH) + "0000")
 
 
 tick = [
@@ -150,7 +167,7 @@ tick = [
 
 PATCH = Patch(
     id="hit-counter",
-    title="Contador de combo na tela (N HITS) com a fonte do HUD",
+    title="Contador de combo na tela (N HIT COMBO) com a fonte do HUD",
     spec="src/backend/specs/SPEC-013-hit-counter.md",
     blocks=[Block("tick", tick)],
     hooks=[
