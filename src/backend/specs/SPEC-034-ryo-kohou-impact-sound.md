@@ -47,3 +47,11 @@ O Kohou fraco (SPEC-010) tem um hit só, com efeito `$01` e sem marca: nunca toc
 - [ ] Kohou forte só com o 2º hit (antiaéreo): som original
 - [ ] Kohou forte defendido: som de defesa original
 - [ ] Hien Shippuukyaku e outros golpes: sem mudança
+
+## Kohou médio com som original
+
+O filtro agora exige a animação exclusiva $17B do forte (SPEC-062), em vez
+de aceitar qualquer comando $47. O médio ($025, animação $145) e o fraco
+($024, $17E) mantêm o som original já copiado pelo motor. A marca $3A8 é
+limpa nesses casos, impedindo herdar o som pesado de um forte anterior.
+As demais condições do som pesado no forte continuam iguais.

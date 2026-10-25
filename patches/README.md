@@ -1,5 +1,9 @@
 # Patches
 
+Documentação organizada por escopo: [índice das specs](../src/backend/specs/README.md),
+[Ryo e balanceamento aprovado](../src/backend/specs/characters/ryo/README.md)
+e [mecânicas globais](../src/backend/specs/global/README.md).
+
 Cada pasta é uma alteração isolada da P-ROM. As regras estão em [SPEC-001](../src/backend/specs/SPEC-001-rom-build-and-patches.md) e as decisões em [ADR-0001](../src/backend/adr/ADR-0001-modular-patch-architecture.md) e [ADR-0005](../src/backend/adr/ADR-0005-global-vs-character-patches.md).
 
 ```
@@ -23,6 +27,18 @@ Os globais são aplicados antes dos de personagem.
 
 ## Globais
 
+`crossup-close-pressure`: cross aéreo anula o afastamento do hit e libera
+pressão na aterrissagem para todo o elenco ([SPEC-060](../src/backend/specs/SPEC-060-crossup-close-pressure.md)).
+
+`landing-dash`: reconhece direcionais no fim do salto para iniciar dash
+no primeiro frame de chão ([SPEC-056](../src/backend/specs/SPEC-056-landing-dash.md)).
+
+`directional-only-special-buffer`: buffer só de direcionais, exigindo botão
+novo na saída da defesa/recuperação ([SPEC-052](../src/backend/specs/SPEC-052-directional-only-special-buffer.md)).
+
+`low-health-super-guard-pain`: com vida até 32, defender SUPER reproduz a
+animação de cheap KO com 24 frames de punição (dano na defesa pode matar) ([SPEC-051](../src/backend/specs/SPEC-051-low-health-super-guard-pain.md)).
+
 | Patch | Spec |
 |---|---|
 | `controls-4button-layout` (C/D fortes, A+C arremesso, A+D uppercut, B+D chute baixo, START provoca) | [SPEC-002](../src/backend/specs/SPEC-002-controls-4button-layout.md) |
@@ -39,10 +55,24 @@ Os globais são aplicados antes dos de personagem.
 | `projectile-ignores-attacks` (projétil não é dissipado ao receber golpe; só some ao acertar ou contra outro projétil) | [SPEC-038](../src/backend/specs/SPEC-038-projectile-ignores-attacks.md) |
 | `blockstun-command-buffer` (comando de especial feito durante a defesa sai no 1º frame livre) | [SPEC-042](../src/backend/specs/SPEC-042-blockstun-command-buffer.md) |
 
+| `uppercut-juggle` (uppercut anti-aéreo lança o adversário para continuar o combo) | [SPEC-043](../src/backend/specs/SPEC-043-uppercut-juggle.md) |
+
 ## Personagens
 
 | Personagem | Patch | Spec |
 |---|---|---|
+| Ryo | `lp-hp-hk-target-combo` (soco fraco em pé/agachado → forte perto → trás+chute forte) | [SPEC-061](../src/backend/specs/SPEC-061-ryo-lp-hp-hk-target-combo.md) |
+| Ryo | `jump-lk-pressure` (chute fraco aéreo: recuo uniforme e aterrissagem livre ao conectar) | [SPEC-059](../src/backend/specs/SPEC-059-ryo-jump-lk-pressure.md) |
+| Ryo | `kohou-dash-input` (Kohou aceita baixo-frente + soco durante dash) | [SPEC-057](../src/backend/specs/SPEC-057-ryo-kohou-dash-input.md) |
+| Ryo | `kohou-damage` (forte: referência 9 por hit/18 total, fraco 8) | [SPEC-054](../src/backend/specs/SPEC-054-ryo-kohou-damage.md) |
+| Ryo | `kououken-damage` (dano reduzido: referência forte 16, médio 12, fraco 8) | [SPEC-053](../src/backend/specs/SPEC-053-ryo-kououken-damage.md) |
+| Eiji | `crouching-heavy-kick-knockdown` (chute forte agachado mantém 2 hits e derruba no segundo) | [SPEC-050](../src/backend/specs/SPEC-050-eiji-crouching-heavy-kick-knockdown.md) |
+| Micky | `crouching-heavy-kick-knockdown` (chute forte agachado derruba) | [SPEC-049](../src/backend/specs/SPEC-049-micky-crouching-heavy-kick-knockdown.md) |
+| Mr. Big | `cross-diving-three-buttons` (↓↘→ + soco: fraco, médio e dois socos = forte) | [SPEC-048](../src/backend/specs/SPEC-048-mr-big-cross-diving-three-buttons.md) |
+| Mr. Big | `ground-blaster-three-buttons` (chute fraco = fraco, chute forte = médio, dois chutes = forte) | [SPEC-047](../src/backend/specs/SPEC-047-mr-big-ground-blaster-three-buttons.md) |
+| King | `trap-shot-three-buttons` (chute fraco = fraco, chute forte = médio, dois chutes = forte) | [SPEC-046](../src/backend/specs/SPEC-046-king-trap-shot-three-buttons.md) |
+| King | `moushuukyaku-three-buttons` (chute fraco = fraco, chute forte = médio, dois chutes = forte) | [SPEC-045](../src/backend/specs/SPEC-045-king-moushuukyaku-three-buttons.md) |
+| King | `knockdown-finishes` (rasteira e último hit do Moushuukyaku forte derrubam) | [SPEC-044](../src/backend/specs/SPEC-044-king-knockdown-finishes.md) |
 | Ryo | `air-fireball-forward-jump` (Kou'ouken aéreo também no pulo para frente) | [SPEC-006](../src/backend/specs/SPEC-006-ryo-air-fireball-forward-jump.md) |
 | Ryo | `kououken-weak-startup` (Kou'ouken fraco com startup de 11 frames) | [SPEC-009](../src/backend/specs/SPEC-009-ryo-kououken-weak-startup.md) |
 | Ryo | `kohou-weak-short` (Kohou fraco: sobe pouco, 1 hit, derruba) | [SPEC-010](../src/backend/specs/SPEC-010-ryo-kohou-weak-short.md) |
@@ -80,3 +110,9 @@ Um patch de personagem tem uma responsabilidade só, mesmo quando o ponto do mot
 2. Escreva a spec em `src/backend/specs/`.
 3. Adicione o id em `manifest.json`: em `"global"`, ou em `"characters": {"<personagem>": [...]}`.
 4. Rode o build.
+
+- Ryo: `kohou-three-buttons` — SPEC-062; custo global dos fortes com dois botões — SPEC-063.
+
+- Ryo: `hien-three-buttons-break` — dois chutes para forte, break LP+LK no segundo hit, flip vertical e relançamento (SPEC-064).
+
+- Global: `juggle-air-hurtbox` — preserva caixa de dano enquanto o alvo sobe/cai em juggle de Kohou/Hien (SPEC-065).

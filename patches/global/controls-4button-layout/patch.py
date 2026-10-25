@@ -135,6 +135,7 @@ translate_input = [
     Ins("832e0271", "or.b d1, $271(a6)"),
     Branch("bra", "clear"),
     Label("throw"),
+    Branch("bsr", "kohou_break"), Branch("bne", "clear"),
     Ins("08ee00060271", "bset.b #$6, $271(a6)"),
     Branch("bra", "clear"),
     Label("uppercut"),
@@ -146,6 +147,16 @@ translate_input = [
     Ins("422e0272", "clr.b $272(a6)"),
     Label("done"),
     JmpAbs(ORIG_TAIL),
+    Label("kohou_break"),
+    Ins("0c6e00010062", "cmpi.w #$1, $62(a6)"), Branch("bne", "not_break"),
+    Ins("0c6e00470230", "cmpi.w #$47, $230(a6)"), Branch("beq", "break_move"),
+    Ins("0c6e00430230", "cmpi.w #$43, $230(a6)"), Branch("bne", "not_break"),
+    Label("break_move"),
+    Ins("0c2e000303b4", "cmpi.b #$3, $3b4(a6)"), Branch("bne", "not_break"),
+    Ins("0c2e00020041", "cmpi.b #$2, $41(a6)"), Branch("bne", "not_break"),
+    Ins("1d7c000103b5", "move.b #$1, $3b5(a6)"),
+    Ins("7001", "moveq #$1, d0"), Ins("4e75", "rts"),
+    Label("not_break"), Ins("7000", "moveq #$0, d0"), Ins("4e75", "rts"),
 ]
 
 PATCH = Patch(

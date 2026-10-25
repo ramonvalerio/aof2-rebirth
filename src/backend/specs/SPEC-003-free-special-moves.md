@@ -58,3 +58,5 @@ Histórico: a primeira versão zerava só a id+0. Com a SPEC-004, o botão fraco
 - [ ] SUPER reduz a barra como no original
 - [ ] DESPERATION (vida piscando) reduz a barra como no original
 - [ ] Com os dois patches ativos, os controles da SPEC-002 continuam funcionando
+
+Exceção global atual: versões fortes selecionadas com dois botões custam 20% de Spirit, conforme SPEC-063.

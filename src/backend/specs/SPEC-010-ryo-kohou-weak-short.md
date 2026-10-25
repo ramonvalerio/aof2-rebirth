@@ -59,3 +59,7 @@ O Kohou forte (C, `$023`) não muda.
 ## Histórico
 
 - A primeira versão usava o efeito `$0A` (reação `$1A`, estado `$1F`), que derruba com outra animação. Trocado para `$01`, o efeito que o próprio Kohou forte usa no hit que derruba.
+
+## Specs relacionadas
+
+Dano do Kohou fraco/forte: [SPEC-054](SPEC-054-ryo-kohou-damage.md).

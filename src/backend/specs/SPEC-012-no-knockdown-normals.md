@@ -54,3 +54,10 @@ rts
 - [ ] Normal em oponente tonto: cai
 - [ ] Kohou/Zanretsuken em oponente no ar: cai
 - [ ] Anti-aéreo com normal: oponente cai de pé e pode agir
+
+## Specs relacionadas
+
+Exceções por personagem usam efeito explícito de queda: rasteiras de
+King (SPEC-044), Micky (SPEC-049), Eiji no segundo hit (SPEC-050) e chute
+forte do dash de Robert (SPEC-030). A regra global não apaga esses efeitos
+contra alvo no chão. Ver [índice por personagem](README.md).

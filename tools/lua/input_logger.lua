@@ -14,7 +14,7 @@ local PLAYERS = {
   { name = "P2", base = 0x109380 },
 }
 local HOOK_ADDR = 0x1D87C        -- rotina original de input (patch: jmp)
-local PATCH_ADDR = 0x0FE000      -- rotina nova do patch
+local PATCH_ADDR = memory.readdword(HOOK_ADDR + 2) -- destino real do JMP do tradutor
 local START_ADDR = 0x10832B      -- START recém-pressionado (a5+$32B)
 
 -- Confirma se a P-ROM carregada é a do hack ($4EF9 = jmp).

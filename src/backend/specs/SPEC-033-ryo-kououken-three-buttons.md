@@ -42,3 +42,7 @@ Antes: C = fraco (`$013`), D = forte (`$011`); o médio só saía pela CPU.
 - [ ] ↓↘→ + D: Kou'ouken forte (startup 23), projétil grande, não derruba
 - [ ] C+D sem o movimento continua sendo o uppercut
 - [ ] Cancel de normal em ↓↘→ + C+D funciona (SPEC-008)
+
+## Specs relacionadas
+
+Balanceamento de dano isolado: [SPEC-053](SPEC-053-ryo-kououken-damage.md).

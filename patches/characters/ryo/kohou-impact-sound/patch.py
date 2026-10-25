@@ -35,7 +35,8 @@ CLOSE = 80
 impact = [
     Ins(f"0c68{RYO:04x}0062", f"cmpi.w #${RYO:x}, $62(a0)"),
     Branch("bne", "out"),
-    Ins(f"0c68{KOHOU_CMD:04x}0230", f"cmpi.w #${KOHOU_CMD:x}, $230(a0)"),
+    # Animacao exclusiva do forte: medio $145 e fraco $17E usam som nativo.
+    Ins("0c68017b006e", "cmpi.w #$17b, $6e(a0)"),
     Branch("bne", "unmark"),
     Ins("102e007c", "move.b $7c(a6), d0"),             # defesa ($21872: $7C & $F = 3)
     Ins("0200000f", "andi.b #$f, d0"),
@@ -67,7 +68,7 @@ impact = [
 
 PATCH = Patch(
     id="kohou-impact-sound",
-    title="Ryo: Kohou com os 2 hits toca o som de impacto do Hien Shippuukyaku",
+    title="Ryo: som pesado apenas no Kohou forte; medio e fraco com som original",
     spec="src/backend/specs/SPEC-034-ryo-kohou-impact-sound.md",
     blocks=[Block("kohou_impact", impact)],
     hooks=[shared_hook(HIT_SOUND, "kohou_impact")],

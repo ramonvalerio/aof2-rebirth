@@ -14,7 +14,13 @@
     "rush-specials-true-combo",
     "jump-instant",
     "projectile-ignores-attacks",
-    "blockstun-command-buffer"
+    "blockstun-command-buffer",
+    "uppercut-juggle",
+    "juggle-air-hurtbox",
+    "low-health-super-guard-pain",
+    "directional-only-special-buffer",
+    "landing-dash",
+    "crossup-close-pressure"
   ],
   "characters": {
     "ryo": [
@@ -26,10 +32,17 @@
       "crouch-punch-advantage",
       "haoh-easy-input",
       "hien-weak-startup",
+      "hien-three-buttons-break",
       "normal-chains",
+      "lp-hp-hk-target-combo",
       "zanretsuken-19-hits",
       "standing-lk-frames",
+      "jump-lk-pressure",
       "kououken-three-buttons",
+      "kououken-damage",
+      "kohou-damage",
+      "kohou-three-buttons",
+      "kohou-dash-input",
       "kohou-impact-sound",
       "kououken-impact-sound",
       "close-hp-kououken-target-combo",
@@ -45,6 +58,21 @@
     "takuma": [
       "desperation-command",
       "kououken-three-buttons"
+    ],
+    "king": [
+      "moushuukyaku-three-buttons",
+      "trap-shot-three-buttons",
+      "knockdown-finishes"
+    ],
+    "mr-big": [
+      "ground-blaster-three-buttons",
+      "cross-diving-three-buttons"
+    ],
+    "micky": [
+      "crouching-heavy-kick-knockdown"
+    ],
+    "eiji": [
+      "crouching-heavy-kick-knockdown"
     ],
     "yuri": [
       "kick-remap",

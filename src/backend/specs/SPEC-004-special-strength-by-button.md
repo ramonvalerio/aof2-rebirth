@@ -78,3 +78,12 @@ A força vem de `$271` bits 4/5. Na SPEC-002 isso corresponde a C/D. Sem o patch
 ## Histórico
 
 - **Kou'ouken com A saía forte com a barra cheia.** A versão do golpe (id+2) estava certa, como mostrou a gravação Lua (`LEVEL $11` → `CHOSEN $13`). Mas o tamanho do projétil é recalculado em `$22A5C` a partir da cópia da barra (`$23F`), que continuava cheia. Corrigido com o terceiro hook (`$1D7DE`).
+
+## Specs relacionadas
+
+Pares de chutes: o detector guarda bit 11 de $218 a partir de $68 & $A0.
+Pares de socos usam bit 10. Os marcadores selecionam versões conforme
+as specs de cada personagem, sem mudar a regra global padrão.
+Índice de exceções: [personagens e globais](README.md).
+
+Atualização: o custo dos fortes com dois botões segue [SPEC-063](SPEC-063-two-button-strong-spirit-cost.md).

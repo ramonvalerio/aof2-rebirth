@@ -94,3 +94,20 @@ O cmd 8 realinha o registro para endereço par depois do `$FF` (`$11D6`). String
 - [ ] Hien Shippuukyaku forte: "2 HIT COMBO"
 - [ ] Golpe defendido entre dois acertos zera o contador
 
+
+## Correção: hit adicional nas continuações após cancelamento
+
+O incremento BCD usava ABCD d2,d1 após MOVEQ #1,d2. ABCD também soma o
+flag X; MOVEQ e CMP não o limpam. Um X=1 herdado da física/cancel fazia
+o próximo acerto incrementar 2 em vez de 1. Não era necessário existir
+um contato extra para o HUD mostrar esse número.
+
+Antes de carregar 1, SUB.B d2,d2 agora zera X (subtração sem empréstimo).
+MOVEQ preserva esse zero e ABCD soma exatamente 1. O limite 99 continua
+inalterado. Não subtrai hits nem muda dano, caixas ou cancelamentos.
+A correção é global porque o contador BCD é compartilhado pelo elenco.
+
+Build completo e hooks aprovados. 196 cenários de incremento, hits 1–98
+com X inicial 0/1, inclusive viradas 9→10/19→20/98→99, aprovados;
+build determinístico. Confirmar em partida Kohou 2 hits → cancel →
+próximo acerto =3, seguinte =4, sem alterar o total de contatos reais.

@@ -16,6 +16,8 @@ a força é registrada na detecção ($1E102), nos bits altos de $218:
   bit 10 = soco fraco + soco forte juntos ($270 & $50 = $50); só informação:
            a escolha de nível aqui não muda (cai no fraco); usado por patches
            de personagem (ex.: ryo/kououken-three-buttons)
+  bit 11 = chute fraco + chute forte juntos ($68 & $A0 = $A0), usado
+           por king/moushuukyaku-three-buttons
 $1D41E já descarta esses bits (andi.w #$7f). Comandos sem o bit 9 (IA)
 seguem a regra original da barra.
 
@@ -49,6 +51,17 @@ tag_command = [
     Branch("bne", "save"),
     Ins("00400400", "ori.w #$400, d0"),
     Label("save"),
+    # bit 11: os dois chutes (funções bits 5/7), preservado no comando
+    # para especiais com três versões mesmo depois de soltar os botões.
+    Ins("122e0068", "move.b $68(a6), d1"),
+    Ins("020100a0", "andi.b #$a0, d1"),
+    Ins("0c0100a0", "cmpi.b #$a0, d1"),
+    Branch("bne", "save_kicks"),
+    Ins("00400800", "ori.w #$800, d0"),
+    Label("save_kicks"),
+    Ins("3200", "move.w d0, d1"),
+    Ins("02410c00", "andi.w #$c00, d1"),
+    Ins("56ee03b3", "sne.b $3b3(a6)"),
     Ins("221f", "move.l (a7)+, d1"),
     Ins("3d400218", "move.w d0, $218(a6)"),
     Ins("1d7c003c0a77", "move.b #$3c, $a77(a6)"),
@@ -100,7 +113,24 @@ pick_level = [
 
 # Substitui: move.b $224(a6),$23f(a6) em $1D7DE (cópia da barra antes do custo).
 # Se pick_level marcou $23F (bit 7), mantém o valor do botão; senão, original.
+# Custo global somente para especiais fortes escolhidos com dois botoes.
+# O maximo usa ponto fixo 8.8; dividir as unidades por cinco = 20%.
+ex_cost = [
+    Ins("0c6d00400020", "cmpi.w #$40, $20(a5)"), Branch("bcs", "cost_out"),
+    Ins("0c6d00470020", "cmpi.w #$47, $20(a5)"), Branch("bhi", "cost_out"),
+    Ins("0c2e00c0023f", "cmpi.b #$c0, $23f(a6)"), Branch("bne", "cost_out"),
+    Ins("48e7c000", "movem.l d0-d1, -(a7)"),
+    Ins("4a2e03b3", "tst.b $3b3(a6)"), Branch("beq", "cost_restore"),
+    Ins("7000", "moveq #$0, d0"),
+    Ins("102e0256", "move.b $256(a6), d0"),
+    Ins("7205", "moveq #$5, d1"),
+    Ins("80c1", "divu.w d1, d0"),
+    Ins("1d400241", "move.b d0, $241(a6)"),
+    Label("cost_restore"), Ins("4cdf0003", "movem.l (a7)+, d0-d1"),
+    Label("cost_out"),
+]
 snapshot_gauge = [
+    *ex_cost,
     Ins("082e0007023f", "btst.b #$7, $23f(a6)"),
     Branch("beq", "original"),
     Ins("022e007f023f", "andi.b #$7f, $23f(a6)"),

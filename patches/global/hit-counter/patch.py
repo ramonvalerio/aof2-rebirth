@@ -142,6 +142,9 @@ tick = [
     Ins("1211", "move.b (a1), d1"),
     Ins("0c010099", "cmpi.b #$99, d1"),
     Branch("beq", "show"),
+    # ABCD soma tambem o flag X herdado da fisica/cancel. Limpa-o antes
+    # de incrementar para que cada dano conte exatamente um hit.
+    Ins("9402", "sub.b d2, d2"),
     Ins("7401", "moveq #$1, d2"),
     Ins("c302", "abcd.b d2, d1"),
     Ins("1281", "move.b d1, (a1)"),

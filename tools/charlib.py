@@ -61,7 +61,20 @@ PROJ_HIT_SOUND = 0x224EA
 # (16.16, sinal = sentido). Blocos DEPOIS do original: podem trocar $10(a0).
 PROJ_SPAWN_X = 0x22AC2
 
+# Saída de ataque aéreo depois do contato com chão; antes do original.
+LANDING_ATTACK = 0x1C234
+# Movimento horizontal da reação; depois da conversão original para 16.16.
+REACTION_PUSH = 0x1CBB0
+
 _SHARED = {
+    LANDING_ATTACK: ("197c00010058", "before", [
+        Ins("197c00010058", "move.b #$1, $58(a4)"),
+    ]),
+    REACTION_PUSH: ("3028002048c0e188", "after", [
+        Ins("30280020", "move.w $20(a0), d0"),
+        Ins("48c0", "ext.l d0"),
+        Ins("e188", "lsl.l #$8, d0"),
+    ]),
     KICK_SELECT: ("0244007f3b440020", "before", [
         Ins("0244007f", "andi.w #$7f, d4"),
         Ins("3b440020", "move.w d4, $20(a5)"),
@@ -207,11 +220,12 @@ def normal_chain_block(char, rows):
     return out
 
 
-def multi_hit_block(char, cmd):
+def multi_hit_block(char, cmd, budget=None):
     """Golpe que prende e bate várias vezes conta cada hit (SPEC-027).
 
     Depois do 1º contato ($21B = 0) e enquanto houver hits extras ($247),
     rearma os filhos 5/6 uma vez por peça (contador do quadro $56 = 1).
+    Com budget, usa o contador próprio desse offset e não rearma no hitstop.
     """
     return [
         *only(char, ATTACK_STATE),
@@ -219,8 +233,13 @@ def multi_hit_block(char, cmd):
         Branch("bne", "out"),
         Ins("4a2e021b", "tst.b $21b(a6)"),              # antes do 1º contato: nada
         Branch("bne", "out"),
-        Ins("4a2e0247", "tst.b $247(a6)"),              # acabaram os hits extras
+        Ins(f"4a2e{(0x247 if budget is None else budget):04x}",
+            f"tst.b ${(0x247 if budget is None else budget):x}(a6)"),
         Branch("beq", "out"),
+        *([] if budget is None else [
+            Ins("0c2e00020041", "cmpi.b #$2, $41(a6)"),
+            Branch("beq", "out"),
+        ]),
         Ins("48e780c0", "movem.l d0/a0-a1, -(a7)"),
         *player_sprite(),
         Ins("0c2800010056", "cmpi.b #$1, $56(a0)"),     # 1 vez por peça

@@ -24,7 +24,7 @@ Dependência: Python 3.10+ e `capstone` (`pip install capstone`).
 ## Fatos de hardware usados
 
 - A P-ROM `056-p1.p1` (1 MiB) fica armazenada em *word-swap*. O build troca os bytes de cada palavra antes de aplicar os patches e destroca no final. Todos os endereços nos patches são endereços 68000 (big-endian).
-- Espaço livre: a região `$0FDDA0–$0FFF00` está zerada na ROM original. O build aloca blocos novos em `$0FE000–$0FFE00`.
+- Espaço livre: a região `$0FDDA0–$0FFEFF` está zerada na ROM original. O build aloca blocos em `$0FDDA0–$0FFF00` (fim exclusivo). A reserva foi ampliada dentro dessa mesma área zerada para comportar os novos patches; não expande a P-ROM nem sobrescreve dados usados.
 - O SHA-1 do `056-p1.p1` original (`ee42f3ca…cd71`) é conferido antes de qualquer patch.
 
 ## Contrato de um patch
@@ -63,3 +63,7 @@ Verificação extra (manual, ~1 min): `python tools/hook_check.py` confirma que 
 ## Distribuição
 
 ROMs e BIOS são propriedade da SNK e não entram no git (`.gitignore`). O repositório contém apenas código, patches e documentação.
+
+Alocação atual: alinhamento de 2 bytes (68000), para aproveitar a reserva sem ampliar seus limites. Ver SPEC-063.
+
+Reserva adicional atual: $7ED70–$7FFFF, zerada no dump SHA validado. O alocador alterna para ela quando a primeira reserva não comporta o próximo bloco, sem cruzar limites, com alinhamento par e checagem de zeros antes de cada build. Ver SPEC-064.

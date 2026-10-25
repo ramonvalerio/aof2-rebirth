@@ -37,3 +37,36 @@ O Zanretsuken acerta **19 socos** e o contador mostra **19 HIT COMBO**.
 - [ ] Zanretsuken colado: 19 HIT COMBO
 - [ ] O oponente fica preso até o fim e cai
 - [ ] Dano total parecido com o original
+
+## Correção: dano excessivo e limite de contatos
+
+O usuário relatou dano excessivo intermitente com e sem defesa. Dois
+problemas identificados no patch anterior:
+
+- Só bytes 0/1 do golpe tinham sido reduzidos para 2. Bytes 2/3, copiados
+  para $207 e usados em contatos defendidos, continuavam 10/8. Agora são
+  1/1 nas versões $1E/$1F. É valor base; o motor mantém escala por vida,
+  dificuldade e modificadores originais. 19 contatos têm base nominal 38
+  em acerto ou 19 na defesa, não um teto absoluto de HP após escala.
+- O rearmamento dependia somente de $247. Efeito $08 em $217F8/$21812
+  remove retornos da pilha, pulando o decremento $21338 enquanto prende
+  o alvo. Isso permite rearmar mais do que os 19 contatos previstos.
+  O fim do hitstop também recoloca $56 em 1 ($1CA54), permitindo repetição.
+
+Agora o Ryo reserva o byte $3AA (após som $3A8 e target combo $3A9) como
+orçamento de contatos. Inicializa em 19 em SPECIAL_CHOSEN apenas para
+$1E/$1F. HIT_SOUND desconta uma unidade por contato, defendido ou não,
+antes da reação do defensor. Não depende de $21338. Não rearma no
+hitstop nem após esgotar o contador. Uma caixa já enfileirada ou soltura
+que conectar após zero tem $71/$248 zerados e o bônus $252 bit 0 limpo,
+sem dano extra nem underflow do contador. Não altera vida diretamente.
+
+O helper multi_hit_block ganhou budget opcional; chamadas sem budget
+(incluindo Yuri) geram o mesmo código de antes. A duração e a animação
+do Zanretsuken, os comandos e os outros golpes não são modificados.
+A soltura e o total efetivo do contador visual ainda exigem teste em jogo.
+
+Validação: builds completo/isolado, hooks; simular contatos além do limite,
+reinício do golpe e comparar geração do helper para Yuri. No emulador,
+repetir forte/fraco com defesa, sem defesa, no canto e após cancel;
+confirmar ausência de dano excessivo e total de hits/dano estável.

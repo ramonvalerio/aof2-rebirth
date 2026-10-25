@@ -84,5 +84,9 @@ PATCH = Patch(
     data=[
         Data(addr, f"{dur:02x}", f"{(dur & 0x80) | 1:02x}")
         for addr, dur in STOPPED_FRAMES
+    ] + [
+        # $40 ainda fazia a física aguardar mesmo com duração de 1 frame.
+        # As listas D2 originais continuam definindo a mesma trajetória.
+        Data(addr + 1, "40", "00") for addr, _ in STOPPED_FRAMES
     ],
 )

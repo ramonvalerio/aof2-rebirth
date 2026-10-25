@@ -32,8 +32,10 @@ P1_NAME = "056-p1.p1"
 P1_SHA1 = "ee42f3ca4516226b0088d0303ed28e3ecdabcd71"
 
 # Região zerada no fim da P-ROM original (0xFDDA0..0xFFF00), com margem.
-FREE_START = 0xFE000
-FREE_END = 0xFFE00
+FREE_START = 0xFDDA0
+FREE_END = 0xFFF00
+FREE_SPILL_START = 0x7ED70
+FREE_SPILL_END = 0x80000
 
 ZIP_DATE = (1996, 12, 24, 23, 32, 0)  # build determinístico
 
@@ -101,13 +103,25 @@ def build(patch_ids, out_zip=OUT_ZIP, log=print):
             owner[a] = who
         rom[addr:addr + len(data)] = data
 
-    cursor = FREE_START
+    regions = [(FREE_START, FREE_END), (FREE_SPILL_START, FREE_SPILL_END)]
+    # Ambas as reservas devem pertencer ao espaco zerado do dump validado.
+    for lo,hi in regions:
+        if any(rom[lo:hi]):
+            raise BuildError(f"reserva ${lo:x}..${hi:x} nao esta zerada")
+    region_index = 0
+    cursor = regions[0][0]
 
     def alloc(size, who):
-        nonlocal cursor
+        nonlocal cursor, region_index
+        aligned = (size + 1) & ~1
+        if cursor + aligned > regions[region_index][1]:
+            region_index += 1
+            if region_index >= len(regions):
+                raise BuildError(f"{who}: espaço livre esgotado")
+            cursor = regions[region_index][0]
         org = cursor
-        cursor = (cursor + size + 15) & ~15
-        if cursor > FREE_END:
+        cursor += aligned
+        if cursor > regions[region_index][1]:
             raise BuildError(f"{who}: espaço livre esgotado")
         return org
 

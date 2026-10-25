@@ -29,6 +29,10 @@ Para todos os personagens:
 
 ## Pendências
 
+**Atualização SPEC-058:** além de manter duração 1, os 42 quadros antes
+marcados $40 agora usam flags $00, para a física não esperar o fim do
+quadro parado. Ver [análise e medição de resposta](SPEC-058-movement-response.md).
+
 - **Diagonal com borda tardia:** o pulo só sai na borda de cima. Se o controle registra a frente um frame antes da cima, há 1 frame de andar (limite do hardware/controle).
 - **Outros comandos com cima:** um especial cujo 1º passo aceite cima (máscara sem o bit 0) também bloqueia o pulo por `$A0E`. Se algum personagem ainda andar antes de pular, procurar esse comando.
 
