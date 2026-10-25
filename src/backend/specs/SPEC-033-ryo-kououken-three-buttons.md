@@ -23,9 +23,15 @@ Antes: C = fraco (`$013`), D = forte (`$011`); o médio só saía pela CPU.
    - senão → `$012`, nível 2, `$A0` (projétil médio).
 3. **Queda:** byte 6 (efeito de acerto) do `$013`: `$00` → `$01`, o mesmo efeito da queda do Kohou forte (SPEC-010). O projétil leva o efeito do jogador (`$20A` → `$37` do projétil em `$22A3A`).
 
+## Correção (2026-10-25): ↓↘→ + C+D saía o uppercut
+
+**Causa:** cada passo do leitor de comandos (`$1E05C`) é `[máscara][valor][prazo][espera][próximo]` e compara `(input & máscara) = valor`. O último passo do ↓↘→ + soco (offset `$1B8` da tabela `$25D04`) é `f0 10`: os botões têm que ser **exatamente** soco. O par C+D chega como `$50` (bit 6 = "C segurado", SPEC-002), então o comando falhava e o par virava uppercut.
+
+**Correção:** hook compartilhado em `$1E062` (`charlib.CMD_STEP`, antes do `and.b d1,d0` / `cmp.b 1(a1,d4.w),d0`): Ryo e passo `$1B8` → máscara `andi.b #$BF` (`$F0` → `$B0`). A lista `$1A0`–`$1B8` é usada pelo ↓↘→ + soco de 11 personagens (Ryo, Robert, Eiji, Jack, Lee, Micky, John, Takuma, Yuri, Temjin, Geese), por isso a troca é por código e só para o Ryo. Não há espaço livre ao alcance de 16 bits da tabela para uma cópia (e "próximo" negativo significa "comando completo", `$1E076`).
+
 ## Pendências / riscos
 
-- **C+D também é o uppercut** (SPEC-002). Com o movimento ↓↘→ no histórico, o especial pendente (`$218`) deve ter prioridade em `$1D808`. Confirmar em jogo que não sai uppercut.
+- **C+D também é o uppercut** (SPEC-002): sem o movimento, continua saindo o uppercut.
 - **Queda pelo projétil:** o efeito `$01` foi validado em golpe corpo a corpo (Kohou). Confirmar que o acerto do projétil também derruba.
 - **Kou'ouken aéreo:** usa outros golpes; não muda.
 

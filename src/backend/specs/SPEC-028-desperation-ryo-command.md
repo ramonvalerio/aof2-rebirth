@@ -27,3 +27,15 @@ Os slots do Takuma e da Yuri passam a apontar para `+$A0E` (a lista do Ryo). Rob
 - [ ] Robert, Takuma e Yuri: ↓ ↘ → ↘ ↓ ↙ ← + C, com vida piscando e barra cheia, sai o DESPERATION
 - [ ] O comando antigo do Takuma e da Yuri não sai mais
 - [ ] Os outros especiais deles não mudam
+
+## Nota (2026-10-25)
+
+Com o layout novo (SPEC-002), o passo final `+ C` original (`f0 40`) não saía com nenhum botão. O `ryo/desperation-command` (SPEC-037) troca o passo para `f0 10` (C = soco fraco); como a lista é compartilhada, Takuma e Yuri também passam a sair com + C.
+
+## Nota 2 (2026-10-25)
+
+O Takuma deixou de usar a lista do Ryo: o `takuma/desperation-ryo-command` foi substituído por `takuma/desperation-command` (SPEC-040, ↓↘→↓↘→ + C+D). Esta spec vale agora só para a Yuri.
+
+## Nota 3 (2026-10-25)
+
+O Robert (lista própria `+$A4E`, igual à do Ryo) tinha o mesmo passo final `f0 40` sem saída no layout novo: corrigido em `robert/desperation-command` (SPEC-041).

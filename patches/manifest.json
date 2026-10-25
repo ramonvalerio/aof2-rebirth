@@ -12,7 +12,9 @@
     "hit-counter",
     "persistent-bruises",
     "rush-specials-true-combo",
-    "jump-instant"
+    "jump-instant",
+    "projectile-ignores-attacks",
+    "blockstun-command-buffer"
   ],
   "characters": {
     "ryo": [
@@ -28,15 +30,21 @@
       "zanretsuken-19-hits",
       "standing-lk-frames",
       "kououken-three-buttons",
-      "kohou-impact-sound"
+      "kohou-impact-sound",
+      "kououken-impact-sound",
+      "close-hp-kououken-target-combo",
+      "desperation-command"
     ],
     "robert": [
       "ryuga-weak-short",
       "kick-remap",
-      "close-hp-chain"
+      "close-hp-chain",
+      "ryugekiken-three-buttons",
+      "desperation-command"
     ],
     "takuma": [
-      "desperation-ryo-command"
+      "desperation-command",
+      "kououken-three-buttons"
     ],
     "yuri": [
       "kick-remap",

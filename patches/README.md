@@ -36,6 +36,8 @@ Os globais são aplicados antes dos de personagem.
 | `persistent-bruises` (rosto machucado continua nos rounds seguintes da mesma luta) | [SPEC-014](../src/backend/specs/SPEC-014-persistent-bruises.md) |
 | `rush-specials-true-combo` (especiais de sequência — Renbuken do Ryo, Robert, Takuma, Eiji e Yuri — com todos os hits em combo) | [SPEC-015](../src/backend/specs/SPEC-015-rush-specials-true-combo.md) |
 | `jump-instant` (pulo sai na hora: quadro parado inicial de 2-3 → 1 frame; zera a velocidade de andar) | [SPEC-023](../src/backend/specs/SPEC-023-jump-instant.md) |
+| `projectile-ignores-attacks` (projétil não é dissipado ao receber golpe; só some ao acertar ou contra outro projétil) | [SPEC-038](../src/backend/specs/SPEC-038-projectile-ignores-attacks.md) |
+| `blockstun-command-buffer` (comando de especial feito durante a defesa sai no 1º frame livre) | [SPEC-042](../src/backend/specs/SPEC-042-blockstun-command-buffer.md) |
 
 ## Personagens
 
@@ -54,10 +56,16 @@ Os globais são aplicados antes dos de personagem.
 | Ryo | `standing-lk-frames` (chute fraco em pé com startup, ativo e recovery do soco fraco em pé) | [SPEC-032](../src/backend/specs/SPEC-032-ryo-standing-lk-frames.md) |
 | Ryo | `kououken-three-buttons` (Kou'ouken: C+D = fraco que derruba, C = médio, D = forte) | [SPEC-033](../src/backend/specs/SPEC-033-ryo-kououken-three-buttons.md) |
 | Ryo | `kohou-impact-sound` (Kohou com os 2 hits: o 2º toca o som de impacto do Hien) | [SPEC-034](../src/backend/specs/SPEC-034-ryo-kohou-impact-sound.md) |
+| Ryo | `kououken-impact-sound` (Kou'ouken fraco toca o som de impacto do Hien) | [SPEC-035](../src/backend/specs/SPEC-035-ryo-kououken-impact-sound.md) |
+| Ryo | `close-hp-kououken-target-combo` (target combo: soco forte perto → Kou'ouken fraco sempre acerta) | [SPEC-036](../src/backend/specs/SPEC-036-ryo-close-hp-kououken-target-combo.md) |
+| Ryo | `desperation-command` (DESPERATION Ryukou Ranbu com ↓↘→↘↓↙← + C) | [SPEC-037](../src/backend/specs/SPEC-037-ryo-desperation-command.md) |
 | Robert | `ryuga-weak-short` (Ryuga fraco: sobe pouco, 1 hit, derruba, como o Kohou fraco do Ryo) | [SPEC-029](../src/backend/specs/SPEC-029-robert-ryuga-weak-short.md) |
 | Robert | `kick-remap` (frente+B = forte perto overhead, trás+D = forte longe, D neutro = fraco com dano forte, chute forte do dash derruba) | [SPEC-030](../src/backend/specs/SPEC-030-robert-kick-remap.md) |
 | Robert | `close-hp-chain` (soco forte perto → B+D ao conectar) | [SPEC-031](../src/backend/specs/SPEC-031-robert-close-hp-chain.md) |
-| Takuma | `desperation-ryo-command` (DESPERATION com o comando do Ryo: ↓↘→↘↓↙← + C) | [SPEC-028](../src/backend/specs/SPEC-028-desperation-ryo-command.md) |
+| Robert | `ryugekiken-three-buttons` (Ryugekiken: C+D = fraco que derruba, C = médio, D = forte) | [SPEC-039](../src/backend/specs/SPEC-039-robert-takuma-fireball-three-buttons.md) |
+| Robert | `desperation-command` (DESPERATION Ryukou Ranbu com ↓↘→↘↓↙← + C) | [SPEC-041](../src/backend/specs/SPEC-041-robert-desperation-command.md) |
+| Takuma | `kououken-three-buttons` (Kou'ouken: C+D = fraco que derruba, C = médio, D = forte) | [SPEC-039](../src/backend/specs/SPEC-039-robert-takuma-fireball-three-buttons.md) |
+| Takuma | `desperation-command` (DESPERATION Ryukou Ranbu com ↓↘→↓↘→ + C+D) | [SPEC-040](../src/backend/specs/SPEC-040-takuma-desperation-command.md) |
 | Yuri | `kick-remap` (B = forte perto, frente+B = bundada, trás+D = fraco com dano forte) | [SPEC-026](../src/backend/specs/SPEC-026-yuri-kick-remap.md) |
 | Yuri | `hyakuretsu-binta-10-hits` (Hyakuretsu Binta conta cada tapa: 10 hits) | [SPEC-027](../src/backend/specs/SPEC-027-multi-hit-rearm.md) |
 | Yuri | `desperation-ryo-command` (DESPERATION com o comando do Ryo: ↓↘→↘↓↙← + C) | [SPEC-028](../src/backend/specs/SPEC-028-desperation-ryo-command.md) |

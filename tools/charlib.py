@@ -6,7 +6,7 @@ patch de personagem declara o hook com `shared_hook(...)` e termina com
 patches do mesmo endereço em sequência (patchlib.Hook.chain).
 """
 from asm68k import Branch, Ins, JmpAbs, JmpNext, Label
-from patchlib import Data, Hook
+from patchlib import Block, Data, Hook
 
 MOVE_TABLE = 0x023BA4   # 16 bytes por golpe
 
@@ -41,6 +41,26 @@ SPECIAL_CHOSEN = 0x1D676
 # DEPOIS do original e podem trocar $A5E(a6).
 HIT_SOUND = 0x224BE
 
+# $1E062: and.b d1,d0 / cmp.b $1(a1,d4.w),d0  (segue no beq de $1E068)
+# Leitor de comandos: compara o input (d1) com um passo da tabela $25D04
+# (a1; d4 = offset do passo; d0 = máscara do passo). a6 = jogador. Os
+# blocos rodam ANTES do original e podem mudar a máscara (d0). As listas de
+# passos são compartilhadas entre personagens (ex.: $1B8 = soco final do
+# ↓↘→ + soco de 11 personagens).
+CMD_STEP = 0x1E062
+
+# $224EA: move.w $30(a5,d4.w),$a5e(a6)  (segue no rts de $224F0)
+# Contato de projétil: a6 = defensor, a5 + d4 = objeto do projétil (criado
+# em $229C0: $44 = comando do dono, $3C = nível 0/1/2 do tamanho). O som do
+# projétil ($30, 0 = sorteado) passa para $A5E. Blocos DEPOIS do original.
+PROJ_HIT_SOUND = 0x224EA
+
+# $22AC2: add.w $10(a3),d3 / move.w d3,$10(a0)  (segue em $22ACA)
+# Criação do projétil ($229C0, opcode $D8 da animação): a6 = jogador dono,
+# a3 = objeto de sprite dele, a0 = projétil, d3 = X, d1 = vx
+# (16.16, sinal = sentido). Blocos DEPOIS do original: podem trocar $10(a0).
+PROJ_SPAWN_X = 0x22AC2
+
 _SHARED = {
     KICK_SELECT: ("0244007f3b440020", "before", [
         Ins("0244007f", "andi.w #$7f, d4"),
@@ -52,6 +72,17 @@ _SHARED = {
     ]),
     ATTACK_WINDOW: ("082e0004003f", "before", [
         Ins("082e0004003f", "btst.b #$4, $3f(a6)"),
+    ]),
+    CMD_STEP: ("c001b0314001", "before", [
+        Ins("c001", "and.b d1, d0"),
+        Ins("b0314001", "cmp.b $1(a1, d4.w), d0"),
+    ]),
+    PROJ_HIT_SOUND: ("3d7540300a5e", "after", [
+        Ins("3d7540300a5e", "move.w $30(a5, d4.w), $a5e(a6)"),
+    ]),
+    PROJ_SPAWN_X: ("d66b001031430010", "after", [
+        Ins("d66b0010", "add.w $10(a3), d3"),
+        Ins("31430010", "move.w d3, $10(a0)"),
     ]),
     HIT_SOUND: ("3d680a5c0a5e", "after", [
         Ins("3d680a5c0a5e", "move.w $a5c(a0), $a5e(a6)"),
@@ -217,3 +248,68 @@ RYO_DESPERATION = 0xA0E           # lista de passos v v> -> v> v <v <- + C
 
 def desperation_slot(char, cmd):
     return DESPERATION_COMMANDS + (char - 1) * 0x20 + (cmd - 0x40) * 2
+
+
+# ---------------------------------------------------------------------------
+# Especial ↓↘→ + soco com três versões pelo botão (SPEC-033):
+#   ↓↘→ + C + D -> fraco (id+2, derruba)   ↓↘→ + C -> médio (id+1)   ↓↘→ + D -> forte (id+0)
+QCF_PUNCH_STEP = 0x1B8      # último passo do ↓↘→ + soco (lista $1A0, compartilhada)
+_HIT_EFFECT, _KNOCKDOWN = 6, 0x01
+_GAUGE = (0xC0, 0xA0, 0x80)  # barra equivalente (bit 7 = marca do special-strength-by-button)
+_LEVEL = (3, 2, 1)
+
+
+def fireball_three_buttons(char, strong_id, name):
+    """Blocos, hooks e dados para o ↓↘→ + soco de `char` (golpes strong_id..+2).
+
+    1. $1D676 (SPECIAL_CHOSEN): comando do jogador ($218 bit 9) com golpe
+       strong_id..strong_id+2 -> versão pelas marcas do botão: bit 10 (C+D,
+       special-strength-by-button) = fraco, bit 8 (forte) = forte, senão médio.
+       Grava $10(a5), $5C(a4) e a barra equivalente $23F (tamanho do projétil).
+    2. $1E062 (CMD_STEP): no passo final $1B8 (f0 10 = exatamente soco) a
+       máscara perde o bit 6, senão o par C+D ($50, "C segurado") era recusado
+       e saía o uppercut.
+    3. Dados: o fraco (id+2) ganha o efeito de acerto $01 (a queda do Kohou).
+    """
+    ids = (strong_id, strong_id + 1, strong_id + 2)
+
+    def pick(k, last=False):
+        mid = ids[k]
+        return [
+            Ins(f"3b7c{mid:04x}0010", f"move.w #${mid:x}, $10(a5)"),
+            Ins(f"197c{_LEVEL[k]:04x}005c", f"move.b #${_LEVEL[k]:x}, $5c(a4)"),
+            Ins(f"1d7c00{_GAUGE[k]:02x}023f", f"move.b #${_GAUGE[k]:x}, $23f(a6)"),
+        ] + ([] if last else [Branch("bra", "out")])
+
+    choose = [
+        *only(char, SPECIAL_CHOSEN),
+        Ins("082e00010218", "btst.b #$1, $218(a6)"),      # bit 9: comando do jogador
+        Branch("beq", "out"),
+        Ins(f"0c6d{ids[0]:04x}0010", f"cmpi.w #${ids[0]:x}, $10(a5)"),
+        Branch("bcs", "out"),
+        Ins(f"0c6d{ids[2]:04x}0010", f"cmpi.w #${ids[2]:x}, $10(a5)"),
+        Branch("bhi", "out"),
+        Ins("082e00020218", "btst.b #$2, $218(a6)"),      # bit 10: C+D
+        Branch("bne", "weak"),
+        Ins("082e00000218", "btst.b #$0, $218(a6)"),      # bit 8: forte
+        Branch("bne", "strong"),
+        *pick(1),
+        Label("weak"),
+        *pick(2),
+        Label("strong"),
+        *pick(0, last=True),
+        Label("out"),
+        JmpNext(SPECIAL_CHOSEN),
+    ]
+    command = [
+        *only(char, CMD_STEP),
+        Ins(f"0c44{QCF_PUNCH_STEP:04x}", f"cmpi.w #${QCF_PUNCH_STEP:x}, d4"),
+        Branch("bne", "out"),
+        Ins("020000bf", "andi.b #$bf, d0"),
+        Label("out"),
+        JmpNext(CMD_STEP),
+    ]
+    blocks = [Block(f"{name}_buttons", choose), Block(f"{name}_command", command)]
+    hooks = [shared_hook(SPECIAL_CHOSEN, f"{name}_buttons"), shared_hook(CMD_STEP, f"{name}_command")]
+    data = [Data(MOVE_TABLE + ids[2] * 16 + _HIT_EFFECT, "00", f"{_KNOCKDOWN:02x}")]
+    return blocks, hooks, data
