@@ -53,6 +53,7 @@ Os globais são aplicados antes dos de personagem.
 | Ryo | `zanretsuken-19-hits` (Zanretsuken conta cada golpe: 19 hits) | [SPEC-025](../src/backend/specs/SPEC-025-ryo-zanretsuken-19-hits.md) |
 | Ryo | `standing-lk-frames` (chute fraco em pé com startup, ativo e recovery do soco fraco em pé) | [SPEC-032](../src/backend/specs/SPEC-032-ryo-standing-lk-frames.md) |
 | Ryo | `kououken-three-buttons` (Kou'ouken: C+D = fraco que derruba, C = médio, D = forte) | [SPEC-033](../src/backend/specs/SPEC-033-ryo-kououken-three-buttons.md) |
+| Ryo | `kohou-impact-sound` (Kohou com os 2 hits: o 2º toca o som de impacto do Hien) | [SPEC-034](../src/backend/specs/SPEC-034-ryo-kohou-impact-sound.md) |
 | Robert | `ryuga-weak-short` (Ryuga fraco: sobe pouco, 1 hit, derruba, como o Kohou fraco do Ryo) | [SPEC-029](../src/backend/specs/SPEC-029-robert-ryuga-weak-short.md) |
 | Robert | `kick-remap` (frente+B = forte perto overhead, trás+D = forte longe, D neutro = fraco com dano forte, chute forte do dash derruba) | [SPEC-030](../src/backend/specs/SPEC-030-robert-kick-remap.md) |
 | Robert | `close-hp-chain` (soco forte perto → B+D ao conectar) | [SPEC-031](../src/backend/specs/SPEC-031-robert-close-hp-chain.md) |

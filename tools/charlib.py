@@ -34,6 +34,13 @@ ATTACK_STATE = 0x1C1DA
 # e podem trocar a versão.
 SPECIAL_CHOSEN = 0x1D676
 
+# $224BE: move.w $a5c(a0),$a5e(a6)  (segue no rts de $224C4)
+# Contato de golpe corpo a corpo: a6 = defensor, a0 = atacante. O som fixo
+# do golpe ($A5C do atacante, opcode $E7 das listas) passa para $A5E do
+# defensor; $21E34 toca $A5E ou sorteia na tabela $21E60. Os blocos rodam
+# DEPOIS do original e podem trocar $A5E(a6).
+HIT_SOUND = 0x224BE
+
 _SHARED = {
     KICK_SELECT: ("0244007f3b440020", "before", [
         Ins("0244007f", "andi.w #$7f, d4"),
@@ -45,6 +52,9 @@ _SHARED = {
     ]),
     ATTACK_WINDOW: ("082e0004003f", "before", [
         Ins("082e0004003f", "btst.b #$4, $3f(a6)"),
+    ]),
+    HIT_SOUND: ("3d680a5c0a5e", "after", [
+        Ins("3d680a5c0a5e", "move.w $a5c(a0), $a5e(a6)"),
     ]),
     SPECIAL_CHOSEN: ("082e00040060", "before", [
         Ins("082e00040060", "btst.b #$4, $60(a6)"),
