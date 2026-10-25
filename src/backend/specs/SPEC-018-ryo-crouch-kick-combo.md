@@ -1,7 +1,7 @@
 # SPEC-018: Ryo: combo baixo B → baixo D e baixo B → baixo B → baixo D
 
 - **Status:** Implementado, aguardando teste em emulador
-- **Patch:** `patches/characters/ryo/normal-chains` (chain; antes `crouch-kick-chain`, ver SPEC-020) + exceção do Ryo na máscara de buffer do `patches/global/special-cancel-input-buffer` (SPEC-008)
+- **Patch:** `patches/global/normal-chains` (linha do Ryo na tabela; ver SPEC-020/SPEC-031) + exceção do Ryo na máscara de buffer do `patches/global/special-cancel-input-buffer` (SPEC-008)
 
 ## Comportamento desejado
 
@@ -51,6 +51,32 @@ O bloco testava `tst.w d0` depois do `jsr $1D808`, mas o `$1D808` não devolve o
 
 O baixo D precisa que o oponente continue na reação por **pelo menos 5 frames** depois do hitstop. A reação pesada (v3) dá folga para isso. Sem o chain (link puro), seriam mais 2 frames de recuperação do baixo B.
 
+## v5: todos os personagens
+
+O chain do baixo B passou para o patch global `normal-chains`, e vale para os 13 personagens:
+- a máscara de buffer `$1C0BA` mantém o `$38` para todos (`$0D000C00`);
+- o byte 14 do baixo B (`$01` → `$02`) ficou **só no Ryo**. Na v5 ele mudava para os 11 que tinham `$01`, e o baixo B do Robert ficou anormal; o efeito desse byte não está mapeado (a reação vem de `$21314`), então os outros voltaram ao original.
+
+| Personagem | Golpe do baixo B |
+|---|---|
+| Ryo | `$00D` |
+| Robert | `$034` |
+| Eiji | `$059` |
+| Jack | `$07B` |
+| Lee | `$0A3` |
+| King | `$0CB` |
+| Micky | `$0E6` |
+| John | `$10E` |
+| Mr.Big | `$130` |
+| Takuma | `$151` |
+| Yuri | `$173` |
+| Temjin | `$195` |
+| Geese | `$1B3` |
+
+## v6: desfeito para os outros personagens
+
+A pedido, o chain do baixo B, a exceção na máscara de buffer e o byte 14 voltaram a valer **só para o Ryo**. Os outros personagens ficam com o original e serão ajustados um a um. O patch voltou para `characters/ryo/normal-chains`.
+
 ## Pendências
 
 - **(v1)** Vantagem real: depende do hitstun da reação leve do oponente, que ainda não foi medido. Se o baixo D não conectar mesmo com o buffer, medir com `tools/lua/frame_data.lua` (coluna `advantage`) e aumentar o hitstun do baixo B (byte 14 do golpe `$00D`).
@@ -61,4 +87,4 @@ O baixo D precisa que o oponente continue na reação por **pelo menos 5 frames*
 - [ ] Baixo B → baixo D: 2 HIT COMBO, sem o oponente defender no meio
 - [ ] Visual: a reação ao baixo B fica a pesada (mais longa)
 - [ ] Baixo B → baixo B → baixo D: 3 HIT COMBO
-- [ ] Outros personagens: botão apertado durante o baixo B não sai sozinho
+- [ ] Outros personagens: baixo B → baixo D também emenda

@@ -1,7 +1,7 @@
 # SPEC-019: Ryo: pulo com soco forte com hitstun e aterrissagem rápida
 
 - **Status:** Implementado, aguardando teste em emulador
-- **Patch:** `patches/characters/ryo/jump-punch-hitstun` (personagem)
+- **Patch:** `patches/characters/ryo/hitstun-extra` (personagem; antes `jump-punch-hitstun`, ver SPEC-024)
 
 ## Comportamento desejado
 

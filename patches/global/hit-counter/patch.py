@@ -4,7 +4,11 @@ Contador de combo na tela ("2 HIT COMBO", "3 HIT COMBO"...), com a fonte do HUD 
 jogo (a do "BEAT BY 0").
 
 Por jogador, a cada frame (hook na atualização do jogador, $1B6A0):
-  - reação do oponente chegou ao quadro final ($A69 bit 7) -> combo acabou
+  - oponente voltou a um estado livre ($40: neutro, andar, agachado,
+    ataque, pulo, dash) -> combo acabou. (A v1 usava o fim da animação de
+    reação, $A69 bit 7: golpes que prendem o oponente, como o Zanretsuken
+    (estado $1F, animação em loop), ou que pegam no ar, como o 2º hit do
+    Hien forte, zeravam o contador entre os hits.)
   - vida do oponente ($6C) caiu e não foi defesa ($7C & $F != 3, o mesmo
     teste de $21872) -> +1 no contador (BCD); começa em 1 se não havia combo
   - a partir de 2 hits: enfileira o registro "NN HIT COMBO" e arma 90 frames
@@ -34,6 +38,11 @@ FIELD = 0x3A0                             # 8 bytes livres no registro de cada j
 RAM_OFFSET_A5 = {"p1": P1 + FIELD - 0x108000, "p2": P2 + FIELD - 0x108000}   # $1620 / $1720
 SHOW_FRAMES = 90
 AFTER_HOOK = 0x1B6A8
+# Estados ($40) em que o oponente está livre: o combo acaba quando ele volta
+# a um deles. 0/1/2 neutro e andar, 3 ataque, 4 pulo, 8 pulo (variante),
+# $D/$E agachado, $10/$11 dash. Reação (6/7), "pegada" ($1F, Zanretsuken),
+# queda e no ar continuam o combo.
+FREE_STATES = sum(1 << st for st in (0, 1, 2, 3, 4, 8, 0xD, 0xE, 0x10, 0x11))
 
 TILE = "2d"                               # paleta 2, fonte do HUD
 LABEL = " HIT COMBO"                      # texto depois do número ("2 HIT COMBO")
@@ -102,9 +111,19 @@ tick = [
     Ins("4cdf0707", "movem.l (a7)+, d0-d2/a0-a2"),
     JmpAbs(AFTER_HOOK),
     Label("ok"),
-    # reação do oponente no quadro final -> combo acabou
-    Ins("4a280a69", "tst.b $a69(a0)"),
-    Branch("bpl", "check"),
+    # oponente defendendo ($7C & $F = 3) ou livre de novo -> combo acabou
+    Ins("720f", "moveq #$f, d1"),
+    Ins("c228007c", "and.b $7c(a0), d1"),
+    Ins("0c010003", "cmpi.b #$3, d1"),
+    Branch("beq", "reset"),
+    Ins("7200", "moveq #$0, d1"),
+    Ins("12280040", "move.b $40(a0), d1"),
+    Ins("0c010020", "cmpi.b #$20, d1"),
+    Branch("bcc", "check"),                          # estados altos: preso/no ar
+    Ins(f"243c{FREE_STATES:08x}", f"move.l #${FREE_STATES:x}, d2"),
+    Ins("0302", "btst.l d1, d2"),
+    Branch("beq", "check"),
+    Label("reset"),
     Ins("42290001", "clr.b $1(a1)"),
     Label("check"),
     Ins("3028006c", "move.w $6c(a0), d0"),

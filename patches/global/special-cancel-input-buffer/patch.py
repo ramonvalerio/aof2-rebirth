@@ -108,9 +108,9 @@ STEP_WINDOW_BYTES = [
 LANDING_BUFFER_MASK = 0x1C0BA   # long por personagem: normais com buffer ($1C08A)
 AIR_NORMALS = 0x0C000C00        # bits $2A,$2B (socos aéreos) e $3A,$3B (chutes aéreos): única máscara
 ORIGINAL_BUFFER_MASKS = {c: 0x01000105 for c in range(1, 13)} | {13: 0x00000105}
-# Exceções por personagem (normais que mantêm o buffer do original):
-# Ryo ($62 = 1): chute fraco agachado ($38, bit 24), para os combos
-# baixo B -> baixo D e baixo B -> baixo B -> baixo D (SPEC-018).
+# Exceção (normais que mantêm o buffer do original): Ryo ($62 = 1), chute
+# fraco agachado ($38, bit 24), para baixo B -> baixo D (normal-chains,
+# SPEC-018). Os outros personagens ficam só com os aéreos.
 CROUCH_LK = 1 << (0x38 - 0x20)
 KEEP_BUFFER = {1: CROUCH_LK}
 

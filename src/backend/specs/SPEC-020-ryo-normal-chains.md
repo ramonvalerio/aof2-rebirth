@@ -1,7 +1,7 @@
 # SPEC-020: Ryo: chains entre normais
 
 - **Status:** Implementado, aguardando teste em emulador
-- **Patch:** `patches/characters/ryo/normal-chains` (personagem; antes `crouch-kick-chain`, SPEC-018)
+- **Patch:** `patches/global/normal-chains` (tabela por personagem; as linhas do Ryo continuam só do Ryo, ver SPEC-031)
 - **Combina com:** SPEC-002 (B+D = chute baixo), SPEC-008 (special cancel e rearme das caixas)
 
 ## Comportamento desejado

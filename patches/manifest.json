@@ -11,7 +11,12 @@
     "no-knockdown-normals",
     "hit-counter",
     "persistent-bruises",
-    "rush-specials-true-combo"
+    "rush-specials-true-combo",
+    "jump-instant",
+    "multi-hit-rearm",
+    "desperation-ryo-command",
+    "normal-remap",
+    "normal-chains"
   ],
   "characters": {
     "ryo": [
@@ -20,8 +25,12 @@
       "kohou-weak-short",
       "overhead-kick",
       "renbuken-juggle",
-      "normal-chains",
-      "jump-punch-hitstun"
+      "hitstun-extra",
+      "haoh-easy-input",
+      "hien-weak-startup"
+    ],
+    "robert": [
+      "ryuga-weak-short"
     ]
   }
 }

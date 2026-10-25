@@ -81,3 +81,16 @@ O cmd 8 realinha o registro para endereço par depois do `$FF` (`$11D6`). String
 - [ ] Combo do P2 aparece do lado direito
 - [ ] Golpes defendidos não contam
 - [ ] Apertar start na tela de título não reinicia o jogo
+
+## v3: hits de especiais que prendem ou pegam no ar
+
+**Sintoma:** o Zanretsuken (vários socos) e o Hien Shippuukyaku forte (2 hits) não apareciam no contador.
+
+**Causa:** o combo acabava quando a reação do oponente chegava ao quadro final (`$A69` bit 7). O Zanretsuken prende o oponente no estado `$1F` (pegada, `$1C96A`) com uma animação em loop; o 2º hit do Hien forte pega o oponente no ar. Nos dois casos o fim de animação aparecia entre os hits e zerava o contador.
+
+**Correção:** o combo acaba quando o oponente (a) **defende** (`$7C & $F = 3`) ou (b) volta a um **estado livre** (`$40` em 0, 1, 2, 3, 4, 8, `$D`, `$E`, `$10`, `$11`: neutro, andar, ataque, pulo, agachado, dash). Reação (6/7), pegada (`$1F`), queda e no ar mantêm o combo.
+
+- [ ] Zanretsuken: cada soco conta ("N HIT COMBO")
+- [ ] Hien Shippuukyaku forte: "2 HIT COMBO"
+- [ ] Golpe defendido entre dois acertos zera o contador
+
