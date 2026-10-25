@@ -55,6 +55,13 @@ class JmpAbs:
     addr: int   # destino absoluto (jmp $xxxxxx.l)
 
 
+@dataclass
+class JmpNext:
+    """Hook encadeado (patchlib.Hook com `chain`): segue para o próximo patch
+    do mesmo endereço ou volta ao jogo. O build troca por JmpAbs."""
+    hook: int   # endereço do hook
+
+
 def _size(item):
     if isinstance(item, Label):
         return 0
@@ -62,7 +69,7 @@ def _size(item):
         return len(bytes.fromhex(item.hex))
     if isinstance(item, Branch):
         return 2
-    if isinstance(item, JmpAbs):
+    if isinstance(item, (JmpAbs, JmpNext)):
         return 6
     if isinstance(item, Raw):
         return len(bytes.fromhex(item.hex))

@@ -100,6 +100,14 @@ O special cancel (normal → especial) continua igual: o comando é guardado dur
 - **A premissa "Kou'ouken fraco conecta no frame 11" não vale no jogo:** pela SPEC-007 e pela medição, o projétil do Kou'ouken (fraco ou forte) só é criado no **frame 23**. Antes disso não existe caixa de ataque, então nenhuma redução de pushback faz o Kou'ouken acertar no frame 11. Para isso é preciso também reduzir o startup do Kou'ouken fraco (assunto já levantado na SPEC-007).
 - **Medido:** o recuo é de 6 px/frame por ~14 frames depois do hitstop, aplicado pela animação de reação do oponente. Não impedia o Kohou de alcançar: a causa era a caixa não rearmada (seção anterior). Reavaliar o pushback só se, depois da correção, ainda faltar alcance.
 
+## Correção (2026-10-25): golpe repetido no fim do normal que acertou
+
+**Sintoma:** acertar um chute forte (ou soco forte) apertando o botão várias vezes fazia sair outro chute forte sozinho no fim da animação.
+
+**Causa:** o hitstop de normal continua acumulando os botões em `$274` (`$1CA66` → `$1BFDE`), o que os chains usam (SPEC-018/020/031). No fim de um golpe no chão, a volta ao neutro/agachado (`$1C2EA` → `$1C30A`/`$1C324`) passa por `$1C39E`, que solta `$274 & $3030` em `$270` e executa o golpe.
+
+**Correção:** hook em `$1C2EA` (`jsr $1DEE6` / `btst #5,$60`): se o golpe que terminou (`$230`) não está na máscara de buffer do personagem (`$1C0BA + char*4`, aéreos e o baixo B do Ryo), `$274` é zerado antes da volta ao neutro. Os chains continuam lendo o buffer durante o golpe.
+
 ## Pendências / riscos
 
 - **Block:** o contato que abre a janela é despachado por `$24B` (tipo do golpe) em `$1CEDC`. Alguns tipos zeram `$21B` (`$1CF9C`) e outros não (`$1D022`). Precisa confirmar em jogo se os normais abrem a janela também na defesa.
@@ -108,6 +116,9 @@ O special cancel (normal → especial) continua igual: o comando é guardado dur
 - **Equilíbrio:** com 12 frames, comandos ficam mais fáceis também por acidente (ex.: meia-lua saindo de andar + agachar).
 
 ## Critérios de aceite (teste manual no FBNeo)
+
+- [ ] Acertar chute forte / soco forte apertando o botão várias vezes não repete o golpe no fim da animação
+- [ ] Ryo: baixo B -> baixo D e soco forte perto -> B+D continuam saindo
 
 - [ ] Ryo: soco forte perto → Kou'ouken cancela ao acertar
 - [ ] Ryo: soco forte perto → Kou'ouken cancela também na defesa (ou registrar que não)

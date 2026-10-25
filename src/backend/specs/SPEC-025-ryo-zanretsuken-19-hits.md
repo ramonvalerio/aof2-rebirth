@@ -1,7 +1,7 @@
 # SPEC-025: Ryo: Zanretsuken com 19 hits
 
 - **Status:** Implementado, aguardando teste em emulador
-- **Patch:** `patches/global/multi-hit-rearm` (tabela de golpes, SPEC-027; antes no `normal-chains` do Ryo)
+- **Patch:** `patches/characters/ryo/zanretsuken-19-hits` (mecanismo `charlib.multi_hit_block`, SPEC-027)
 - **Combina com:** SPEC-013 (contador conta hits com o oponente preso)
 
 ## Comportamento desejado
@@ -24,7 +24,7 @@ O Zanretsuken acerta **19 socos** e o contador mostra **19 HIT COMBO**.
 ## Implementação
 
 - **Dados (`$01E`, `$01F`):** byte 7 (hits extras) `0` → **18**. Dano por soco (bytes 0 e 1) `$28`/`$1E` → **`$02`** (19 × 2 = 38, perto do original).
-- **Hook `$1C1DA`** (começo do estado de ataque, `multi-hit-rearm`): Ryo com `$230 = $44`, depois do 1º contato (`$21B = 0`) e com `$247 > 0`: limpa o `$70` bit 7 dos filhos 5/6 uma vez por peça (quando o contador do quadro do sprite, `$56`, vale 1). Com `$247` em 0, para de rearmar: 1 + 18 = 19 hits.
+- **Hook `$1C1DA`** (começo do estado de ataque, hook compartilhado `charlib.ATTACK_STATE`): Ryo com `$230 = $44`, depois do 1º contato (`$21B = 0`) e com `$247 > 0`: limpa o `$70` bit 7 dos filhos 5/6 uma vez por peça (quando o contador do quadro do sprite, `$56`, vale 1). Com `$247` em 0, para de rearmar: 1 + 18 = 19 hits.
 
 ## Pendências
 

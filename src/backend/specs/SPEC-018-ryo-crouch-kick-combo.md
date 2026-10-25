@@ -1,7 +1,7 @@
 # SPEC-018: Ryo: combo baixo B → baixo D e baixo B → baixo B → baixo D
 
 - **Status:** Implementado, aguardando teste em emulador
-- **Patch:** `patches/global/normal-chains` (linha do Ryo na tabela; ver SPEC-020/SPEC-031) + exceção do Ryo na máscara de buffer do `patches/global/special-cancel-input-buffer` (SPEC-008)
+- **Patch:** `patches/characters/ryo/normal-chains` (ver SPEC-020; hook compartilhado `$1C066`, `charlib.ATTACK_WINDOW`) + exceção do Ryo na máscara de buffer do `patches/global/special-cancel-input-buffer` (SPEC-008)
 
 ## Comportamento desejado
 

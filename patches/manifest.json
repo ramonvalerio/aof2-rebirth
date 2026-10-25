@@ -12,11 +12,7 @@
     "hit-counter",
     "persistent-bruises",
     "rush-specials-true-combo",
-    "jump-instant",
-    "multi-hit-rearm",
-    "desperation-ryo-command",
-    "normal-remap",
-    "normal-chains"
+    "jump-instant"
   ],
   "characters": {
     "ryo": [
@@ -25,12 +21,25 @@
       "kohou-weak-short",
       "overhead-kick",
       "renbuken-juggle",
-      "hitstun-extra",
+      "crouch-punch-advantage",
       "haoh-easy-input",
-      "hien-weak-startup"
+      "hien-weak-startup",
+      "normal-chains",
+      "zanretsuken-19-hits",
+      "standing-lk-frames"
     ],
     "robert": [
-      "ryuga-weak-short"
+      "ryuga-weak-short",
+      "kick-remap",
+      "close-hp-chain"
+    ],
+    "takuma": [
+      "desperation-ryo-command"
+    ],
+    "yuri": [
+      "kick-remap",
+      "hyakuretsu-binta-10-hits",
+      "desperation-ryo-command"
     ]
   }
 }

@@ -1,7 +1,7 @@
 # SPEC-028: DESPERATION de Robert, Takuma e Yuri com o comando do Ryo
 
 - **Status:** Implementado, aguardando teste em emulador
-- **Patch:** `patches/global/desperation-ryo-command` (global, dados)
+- **Patch:** `patches/characters/takuma/desperation-ryo-command` e `patches/characters/yuri/desperation-ryo-command` (dados; o Robert já usa o comando do Ryo)
 
 ## Comportamento desejado
 

@@ -1,7 +1,7 @@
 # SPEC-024: Ryo: soco forte agachado com a vantagem do soco forte perto
 
 - **Status:** Implementado, aguardando teste em emulador
-- **Patch:** `patches/characters/ryo/hitstun-extra` (personagem; antes `jump-punch-hitstun`, SPEC-019)
+- **Patch:** `patches/characters/ryo/crouch-punch-advantage` (personagem; antes `hitstun-extra`, junto com a SPEC-019, revertida)
 
 ## Comportamento desejado
 

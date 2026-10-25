@@ -8,6 +8,15 @@ Cada patch em patches/<id>/patch.py exporta `PATCH = Patch(...)` contendo:
 
 Um hook pode saltar para um bloco do próprio patch: `JmpAbs` com o endereço
 resolvido pelo build via `Hook.to_block`.
+
+Hook encadeado (`chain`): vários patches (ex.: um por personagem) podem
+enganchar no mesmo endereço. O build grava um único jmp no jogo e liga os
+blocos em sequência, na ordem do manifest; cada bloco termina com
+`JmpNext(addr)` quando não é a vez dele. `original` é o código deslocado
+(relocável: sem desvios relativos ao PC), executado pelo build:
+  chain="before": jogo -> bloco 1 -> ... -> bloco N -> original -> addr+len
+  chain="after":  jogo -> original -> bloco 1 -> ... -> bloco N -> addr+len
+Todos os patches do mesmo endereço declaram o mesmo expect, chain e original.
 """
 from dataclasses import dataclass, field
 
@@ -26,6 +35,8 @@ class Hook:
     expect: str        # bytes originais em hex
     program: list = None
     to_block: str = None  # atalho: grava "jmp <bloco>.l" e preenche o resto com NOP
+    chain: str = None     # "before" / "after": hook encadeado (ver acima)
+    original: list = None  # hook encadeado: código deslocado, relocável
 
     def build(self, block_addrs):
         program = self.program

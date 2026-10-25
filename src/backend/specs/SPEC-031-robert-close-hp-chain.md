@@ -1,7 +1,7 @@
 # SPEC-031: Robert: soco forte perto cancela em B + D
 
 - **Status:** Implementado, aguardando teste em emulador
-- **Patch:** `patches/global/normal-chains` (linha do Robert na tabela `CHAINS`)
+- **Patch:** `patches/characters/robert/close-hp-chain` (hook compartilhado `$1C066`, `charlib.normal_chain_block`)
 - **Referência:** SPEC-020 (o mesmo chain no Ryo)
 
 ## Comportamento desejado
@@ -10,7 +10,7 @@ O soco forte perto do Robert, ao conectar (acerto ou defesa), cancela em **B + D
 
 ## Implementação
 
-O patch `normal-chains` virou global com uma tabela `CHAINS` de linhas `(personagem $62, golpe atual $230, botões)`, porque o hook (`$1C066`) é um só:
+Histórico: o patch `normal-chains` chegou a ser global, com uma tabela `CHAINS` de linhas `(personagem $62, golpe atual $230, botões)`, porque o hook (`$1C066`) era um só. Com os hooks encadeados (SPEC-001), cada personagem tem o próprio patch:
 
 | Personagem | Golpe (`$230`) | Botões (byte alto de `$270`/`$274`) | Resultado |
 |---|---|---|---|

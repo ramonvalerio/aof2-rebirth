@@ -64,6 +64,12 @@ Passando direto da direção oposta para o dash, `$68` nunca zera: o estado 0 n�
 
 **Correção:** hooks em `$1BCD6` e `$1BD0E` (`cmp.b $213,d0` / `bne.w $1BD1C`). Se a direção segurada mudou e é só ← ou → (sem cima/baixo), o toque é registrado como **1º toque pendente** (`$213` = direção, `$212 = 1`, `$210 = 16`) antes de encerrar o dash. O 2º toque, já no neutro, dispara o dash novo. Diagonais só encerram, como antes.
 
+## Dash encadeado na mesma direção
+
+**Comportamento:** durante um dash, soltar e tocar de novo a mesma direção emenda outro dash; dá para encadear vários seguidos (→ → → → …), sem esperar o recovery.
+
+**Correção:** no mesmo hook, quando a direção é solta (`d0 = 0`), o dash encerra como antes, mas fica armado o **1º toque pendente** com a direção atual (`$213` mantido, `$212 = 1`, `$210 = 16`). O próximo toque na mesma direção, já no neutro, dispara o dash.
+
 ## Pendências / riscos
 
 - **Visual:** a pose de arranque e a de frenagem aparecem por 1 frame.
@@ -80,3 +86,5 @@ Passando direto da direção oposta para o dash, `$68` nunca zera: o estado 0 n�
 - [ ] Dash com um botão segurado
 - [ ] Meia-lua (↓↘→) repetida não dispara dash
 - [ ] Dash para frente → ← ← → dash para trás (e o inverso)
+- [ ] Dash para frente → → → → → dois dashes seguidos (e o mesmo para trás)
+- [ ] Um único toque depois do fim natural do dash (segurando até acabar) não dispara dash

@@ -45,7 +45,7 @@ Assembly: cada instrução é escrita como encoding hex + texto de desmontagem e
 
 1. O SHA-1 da P-ROM base é o esperado.
 2. Os bytes `expect` de cada hook e de cada `data` conferem com a ROM original.
-3. Nenhum byte é escrito por dois patches (conflito entre patches).
+3. Nenhum byte é escrito por dois patches (conflito entre patches). Exceção: hooks encadeados (`Hook.chain`, ver `tools/charlib.py`), em que vários patches de personagem declaram o mesmo endereço com os mesmos bytes originais e o build grava um único `jmp`, ligando os blocos em sequência na ordem do manifest e terminando no código original deslocado.
 4. Blocos novos só ocupam espaço livre (zerado) e cabem na região reservada.
 5. O código gerado desmonta (capstone) exatamente no texto declarado.
 6. A saída é determinística: mesmas entradas geram o mesmo zip.

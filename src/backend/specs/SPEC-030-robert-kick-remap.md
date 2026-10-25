@@ -1,7 +1,7 @@
 # SPEC-030: Robert: chutes em pé remapeados (overhead em frente + B)
 
 - **Status:** Implementado, aguardando teste em emulador
-- **Patch:** `patches/global/normal-remap` (seção do Robert; o patch também tem a seção da Yuri, SPEC-026)
+- **Patch:** `patches/characters/robert/kick-remap` (hooks compartilhados `$1D41E` e `$1D75C`, `charlib.KICK_SELECT`/`MOVE_RECORD`; a Yuri tem o próprio, SPEC-026)
 - **Referência:** SPEC-016 (o mesmo esquema no Ryo)
 
 ## Comportamento desejado

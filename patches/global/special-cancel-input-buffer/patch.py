@@ -49,6 +49,11 @@
    - normais de chão: saem da máscara $1C0BA (o original tinha
      $20/$22/$28/$38, socos e chutes fracos de pé e agachado)
    O special cancel usa o comando pendente ($218), não esse buffer.
+   - fim de golpe no chão ($1C2EA -> $1C39E): o hitstop de normal continua
+     acumulando ($274, usado pelos chains), mas a volta ao neutro soltava
+     esse buffer e o golpe saía de novo sozinho (chute/soco forte apertado
+     várias vezes durante o acerto). Agora o buffer só sai se o golpe que
+     terminou está na máscara $1C0BA; senão é descartado.
 
 Leitura durante o hitstop: já é nativa (o estado de congelamento
 $41 = 2 chama o leitor de comandos em $1CA08); nada a alterar.
@@ -109,7 +114,7 @@ LANDING_BUFFER_MASK = 0x1C0BA   # long por personagem: normais com buffer ($1C08
 AIR_NORMALS = 0x0C000C00        # bits $2A,$2B (socos aéreos) e $3A,$3B (chutes aéreos): única máscara
 ORIGINAL_BUFFER_MASKS = {c: 0x01000105 for c in range(1, 13)} | {13: 0x00000105}
 # Exceção (normais que mantêm o buffer do original): Ryo ($62 = 1), chute
-# fraco agachado ($38, bit 24), para baixo B -> baixo D (normal-chains,
+# fraco agachado ($38, bit 24), para baixo B -> baixo D (characters/ryo/normal-chains,
 # SPEC-018). Os outros personagens ficam só com os aéreos.
 CROUCH_LK = 1 << (0x38 - 0x20)
 KEEP_BUFFER = {1: CROUCH_LK}
@@ -178,6 +183,32 @@ hitstop_buffer = [
     Ins("4e75", "rts"),
 ]
 
+# $1C2EA (fim de golpe no chão, antes de voltar ao neutro/agachado e soltar
+# o buffer em $1C39E): descarta $274 se o golpe que terminou ($230) não está
+# na máscara de buffer do personagem ($1C0BA + char*4, bit = cmd - $20).
+ground_end_buffer = [
+    Ins("48e7c080", "movem.l d0-d1/a0, -(a7)"),
+    Ins("322e0230", "move.w $230(a6), d1"),
+    Ins("04410020", "subi.w #$20, d1"),
+    Branch("bcs", "clear"),
+    Ins("0c410020", "cmpi.w #$20, d1"),
+    Branch("bcc", "clear"),
+    Ins("302e0062", "move.w $62(a6), d0"),
+    Ins("d040", "add.w d0, d0"),
+    Ins("d040", "add.w d0, d0"),
+    Ins(f"41f9{LANDING_BUFFER_MASK:08x}", f"lea.l ${LANDING_BUFFER_MASK:x}.l, a0"),
+    Ins("20300000", "move.l (a0, d0.w), d0"),
+    Ins("0300", "btst.l d1, d0"),
+    Branch("bne", "keep"),
+    Label("clear"),
+    Ins("426e0274", "clr.w $274(a6)"),
+    Label("keep"),
+    Ins("4cdf0103", "movem.l (a7)+, d0-d1/a0"),
+    Ins("4eb90001dee6", "jsr $1dee6.l"),              # original
+    Ins("082e00050060", "btst.b #$5, $60(a6)"),       # original
+    JmpAbs(0x1C2F4),                                  # bne.b $1c310 (flags do btst)
+]
+
 PATCH = Patch(
     id="special-cancel-input-buffer",
     title="Special cancel global (chão e ar) e buffer de comandos de 12 frames",
@@ -186,8 +217,11 @@ PATCH = Patch(
         Block("rearm_and_cancel", rearm_and_cancel),
         Block("during_special", during_special),
         Block("hitstop_buffer", hitstop_buffer),
+        Block("ground_end_buffer", ground_end_buffer),
     ],
     hooks=[
+        # $1C2EA: jsr $1dee6(pc) / btst.b #5,$60(a6)  (segue no bne de $1C2F4)
+        Hook(addr=0x1C2EA, expect="4eba1bfa082e00050060", to_block="ground_end_buffer"),
         # $1C0B4: jsr $1d808(pc) / beq.b $1c0b2  -> jmp rearm_and_cancel
         Hook(addr=0x1C0B4, expect="4eba175267f8", to_block="rearm_and_cancel"),
         # $1C06C: bne.b $1c08a  ($3F bit 4: pulo)  -> nop

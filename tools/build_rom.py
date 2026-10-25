@@ -8,7 +8,8 @@ Regras (SPEC-001):
     (patches/global/<id>), depois os de personagem
     (patches/characters/<personagem>/<id>);
   - cada hook confere os bytes originais antes de gravar;
-  - dois patches não podem tocar o mesmo byte (conflito = erro);
+  - dois patches não podem tocar o mesmo byte (conflito = erro), exceto
+    hooks encadeados (Hook.chain), que o build liga em sequência;
   - blocos novos são alocados sequencialmente na região livre FREE_START..FREE_END.
 """
 import hashlib
@@ -21,8 +22,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from asm68k import assemble  # noqa: E402
-from patchlib import DataBlock  # noqa: E402
+from asm68k import JmpAbs, JmpNext, assemble, size_of  # noqa: E402
+from patchlib import DataBlock, Hook  # noqa: E402
 
 SRC_ZIP = ROOT / "rom" / "aof2.zip"
 OUT_ZIP = ROOT / "rom" / "aof2r.zip"
@@ -101,17 +102,64 @@ def build(patch_ids, out_zip=OUT_ZIP, log=print):
         rom[addr:addr + len(data)] = data
 
     cursor = FREE_START
-    for p in patches:
-        addrs = {}
-        for name, size in p.block_sizes().items():
-            addrs[name] = cursor
-            cursor = (cursor + size + 15) & ~15
-        if cursor > FREE_END:
-            raise BuildError(f"{p.id}: espaço livre esgotado")
 
+    def alloc(size, who):
+        nonlocal cursor
+        org = cursor
+        cursor = (cursor + size + 15) & ~15
+        if cursor > FREE_END:
+            raise BuildError(f"{who}: espaço livre esgotado")
+        return org
+
+    # 1ª passagem: endereços dos blocos e cadeias de hooks compartilhados.
+    addrs = {}  # id(patch) -> {bloco: endereço}; o id do patch pode repetir entre personagens
+    for p in patches:
+        addrs[id(p)] = {name: alloc(size, p.id) for name, size in p.block_sizes().items()}
+
+    chains = {}  # endereço -> (hook de referência, [(patch, hook)])
+    for p in patches:
+        for h in p.hooks:
+            if h.chain is None:
+                continue
+            if h.chain not in ("before", "after") or h.original is None:
+                raise BuildError(f"{p.id}: hook ${h.addr:06x} encadeado sem chain/original válidos")
+            ref, members = chains.setdefault(h.addr, (h, []))
+            if (h.expect, h.chain, h.original) != (ref.expect, ref.chain, ref.original):
+                raise BuildError(f"{p.id}: hook ${h.addr:06x} difere dos outros patches do mesmo endereço")
+            members.append((p, h))
+
+    next_of = {}   # (patch, endereço) -> destino do JmpNext
+    entry = {}     # endereço -> destino do jmp gravado no jogo
+    trampolines = []
+    for addr, (ref, members) in chains.items():
+        resume = addr + len(bytes.fromhex(ref.expect))
+        heads = [addrs[id(p)][h.to_block] for p, h in members]
+        tramp = alloc(size_of(ref.original) + 6, f"cadeia ${addr:06x}")
+        if ref.chain == "before":
+            targets, tail = heads[1:] + [tramp], resume
+            entry[addr] = heads[0]
+        else:
+            targets, tail = heads[1:] + [resume], heads[0]
+            entry[addr] = tramp
+        for (p, _), t in zip(members, targets):
+            next_of[(id(p), addr)] = t
+        trampolines.append((addr, tramp, ref.original + [JmpAbs(tail)]))
+
+    def resolve(program, p):
+        out = []
+        for item in program:
+            if isinstance(item, JmpNext):
+                if (id(p), item.hook) not in next_of:
+                    raise BuildError(f"{p.id}: JmpNext(${item.hook:06x}) sem hook encadeado")
+                item = JmpAbs(next_of[(id(p), item.hook)])
+            out.append(item)
+        return out
+
+    # 2ª passagem: grava.
+    for p in patches:
         for b in p.blocks:
-            org = addrs[b.name]
-            code = b.build(org) if isinstance(b, DataBlock) else assemble(b.program, org)
+            org = addrs[id(p)][b.name]
+            code = b.build(org) if isinstance(b, DataBlock) else assemble(resolve(b.program, p), org)
             if len(code) != p.block_sizes()[b.name]:
                 raise BuildError(f"{p.id}: bloco {b.name} com tamanho diferente do declarado")
             if any(rom[org:org + len(code)]):
@@ -120,14 +168,21 @@ def build(patch_ids, out_zip=OUT_ZIP, log=print):
             log(f"  {p.id}: bloco {b.name} @ ${org:06x}")
 
         for h in p.hooks:
+            if h.chain is not None and chains[h.addr][1][0][0] is not p:
+                log(f"  {p.id}: hook @ ${h.addr:06x} (encadeado)")
+                continue
             expect = bytes.fromhex(h.expect)
             if bytes(rom[h.addr:h.addr + len(expect)]) != expect:
                 raise BuildError(f"{p.id}: bytes originais em ${h.addr:06x} não conferem")
-            write(h.addr, h.build(addrs), p.id)
-            log(f"  {p.id}: hook @ ${h.addr:06x}")
+            if h.chain is not None:
+                code = Hook(h.addr, h.expect, [JmpAbs(entry[h.addr])]).build({})
+                write(h.addr, code, f"cadeia ${h.addr:06x}")
+            else:
+                write(h.addr, h.build(addrs[id(p)]), p.id)
+            log(f"  {p.id}: hook @ ${h.addr:06x}" + (" (encadeado)" if h.chain else ""))
 
         for e in p.data:
-            new_hex = e.new(addrs) if callable(e.new) else e.new
+            new_hex = e.new(addrs[id(p)]) if callable(e.new) else e.new
             expect, new = bytes.fromhex(e.expect), bytes.fromhex(new_hex)
             if len(expect) != len(new):
                 raise BuildError(f"{p.id}: dado em ${e.addr:06x} muda de tamanho")
@@ -136,6 +191,10 @@ def build(patch_ids, out_zip=OUT_ZIP, log=print):
             write(e.addr, new, p.id)
         if p.data:
             log(f"  {p.id}: {len(p.data)} alteração(ões) de dados")
+
+    for addr, org, program in trampolines:
+        write(org, assemble(program, org), f"cadeia ${addr:06x}")
+        log(f"  cadeia ${addr:06x}: original @ ${org:06x}")
 
     files[P1_NAME] = bytes(swap16(rom))
     out_zip.parent.mkdir(parents=True, exist_ok=True)

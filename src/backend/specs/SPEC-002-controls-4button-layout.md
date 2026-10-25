@@ -6,16 +6,18 @@
 
 ## Comportamento desejado
 
-| Entrada | Ação |
+| Botão físico | Ação |
 |---|---|
-| A | Soco fraco |
-| B | Chute fraco |
-| C | Soco forte |
-| D | Chute forte |
+| A | Chute fraco |
+| B | Chute forte |
+| C | Soco fraco |
+| D | Soco forte |
 | A + C | Arremesso (throw), se estiver perto. Sem direção: em pé (neutro) ou agachado |
-| A + D | Uppercut (no original: A + C) |
-| B + D | Chute baixo (no original: B + C) |
+| C + D | Uppercut (no original: A + C) |
+| B + D | Chute baixo (soco forte + chute forte; no original: B + C) |
 | START | Provocação (taunt) (no original: D) |
+
+**Troca dos botões (v2):** a função de cada botão mudou (antes: A soco fraco, B chute fraco, C soco forte, D chute forte). Hook em `$9D24` (cópia do joystick para o objeto de input `$109080`/`$109180`): os bits 4–7 de `$68`/`$69`/`$6A` são permutados para a função (bit 4 soco fraco ← C, bit 5 chute fraco ← A, bit 6 soco forte ← D, bit 7 chute forte ← B). Todo o resto (tradutor, leitor de comandos, ataques no ar, carga de espírito) passa a ver a função; os menus leem o joystick bruto e não mudam. No tradutor, arremesso = soco fraco + chute fraco (`$30`), uppercut = soco fraco + soco forte (`$50`), chute baixo = soco forte + chute forte (`$C0`).
 
 Histórico: a primeira versão usava C + D para a provocação. Isso foi revisto depois de comparar com a tabela de golpes básicos original: A+C e B+C já eram golpes (uppercut e chute baixo), que precisavam continuar com comando.
 
@@ -97,7 +99,7 @@ Latência: um golpe isolado sai 2 frames depois do aperto. No original, o golpe 
 
 - **Uppercut / chute baixo só na versão fraca:** o original permitia a versão forte (segurando A/B com C). Agora A+D / B+D sempre saem fracos.
 - **Funções do C original perdidas:** "repetir o último ataque" e o walljump (C no ar) não têm mais comando. Recuperar espírito segurando C é tratado fora deste tradutor e precisa ser verificado.
-- **C + D:** não é mais combinação. Sai como botões isolados, e o soco forte tem prioridade.
+- **A + B / A + D / B + C:** não são combinações. Saem como botões isolados.
 - **START em jogo:** no AES ou em modo de 2 jogadores, o START pode ter outros usos (pausa, entrada de desafiante). Verificar se há conflito.
 - **Golpes especiais:** a detecção de comandos (`$27xxx–$29xxx`) lê o input bruto. Especiais com A/B continuam iguais; ainda não foi verificado se C/D contam como soco/chute nos especiais.
 - **Ataques no ar e outros estados:** precisam ser verificados em jogo (`$1C49A` e `$1C5F6` leem `$69` bruto).
@@ -107,10 +109,10 @@ Latência: um golpe isolado sai 2 frames depois do aperto. No original, o golpe 
 
 ## Critérios de aceite (teste manual no FBNeo)
 
-- [ ] A / B tocados geram soco / chute fraco, em pé e agachado
-- [ ] C / D geram soco / chute forte
+- [ ] A / B geram chute fraco / chute forte; C / D geram soco fraco / soco forte, em pé, agachado e no ar
+- [ ] Especiais "+ soco" saem com C/D e "+ chute" com A/B; menus continuam com os botões de antes
 - [ ] A+C perto do oponente arremessa
-- [ ] A+D faz o uppercut e B+D faz o chute baixo
+- [ ] C+D faz o uppercut e B+D faz o chute baixo
 - [ ] START provoca e drena o espírito do oponente, para o P1 e para o P2
 - [ ] Especiais com A/B continuam saindo
 - [ ] CPU luta normalmente

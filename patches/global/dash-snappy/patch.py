@@ -31,6 +31,11 @@ perdia. Os hooks em $1BCD6/$1BD0E (cmp.b $213,d0 / bne.w $1BD1C), quando
 a direção nova é só <- ou -> (sem cima/baixo), registram esse toque como
 1º toque pendente antes de encerrar. O 2º toque, já no neutro, dispara o
 dash na direção nova.
+
+Dash encadeado na mesma direção: soltar a direção durante o dash (d0 = 0)
+também encerra o dash, e o mesmo hook arma o 1º toque pendente com a
+direção atual ($213 mantido). Basta tocar de novo a mesma direção dentro
+de 16 frames para sair outro dash — dá para emendar vários seguidos.
 """
 from asm68k import Branch, Ins, JmpAbs, Label
 from patchlib import Block, Data, Hook, Patch
@@ -143,12 +148,15 @@ def redirect(continue_at):
     return [
         Ins("b02e0213", "cmp.b $213(a6), d0"),
         Branch("beq", "same"),
+        Ins("4a00", "tst.b d0"),                      # soltou a direção
+        Branch("beq", "arm"),
         Ins("0c000004", "cmpi.b #$4, d0"),            # só <-
         Branch("beq", "tap"),
         Ins("0c000008", "cmpi.b #$8, d0"),            # só ->
         Branch("bne", "end"),
         Label("tap"),
         Ins("1d400213", "move.b d0, $213(a6)"),       # 1º toque da direção nova
+        Label("arm"),                                 # soltou: $213 = direção atual
         Ins("1d7c00010212", "move.b #$1, $212(a6)"),
         Ins(f"3d7c{TAP_WINDOW:04x}0210", f"move.w #${TAP_WINDOW:x}, $210(a6)"),
         Label("end"),

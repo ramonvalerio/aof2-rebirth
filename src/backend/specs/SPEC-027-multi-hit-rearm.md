@@ -1,7 +1,7 @@
 # SPEC-027: Especiais que prendem e batem várias vezes contam cada hit
 
 - **Status:** Implementado, aguardando teste em emulador
-- **Patch:** `patches/global/multi-hit-rearm` (global, com tabela por personagem)
+- **Patch:** um patch por personagem — `patches/characters/yuri/hyakuretsu-binta-10-hits` e `patches/characters/ryo/zanretsuken-19-hits` (SPEC-025) — com o mecanismo em `tools/charlib.py` (`multi_hit_block`, hook compartilhado `$1C1DA`)
 - **Combina com:** SPEC-013 (contador), SPEC-025 (Zanretsuken)
 
 ## Comportamento desejado

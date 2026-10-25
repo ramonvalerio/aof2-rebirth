@@ -1,7 +1,7 @@
 # SPEC-020: Ryo: chains entre normais
 
 - **Status:** Implementado, aguardando teste em emulador
-- **Patch:** `patches/global/normal-chains` (tabela por personagem; as linhas do Ryo continuam só do Ryo, ver SPEC-031)
+- **Patch:** `patches/characters/ryo/normal-chains` (hook compartilhado `$1C066`, `charlib.ATTACK_WINDOW`; o Robert tem o próprio, SPEC-031)
 - **Combina com:** SPEC-002 (B+D = chute baixo), SPEC-008 (special cancel e rearme das caixas)
 
 ## Comportamento desejado

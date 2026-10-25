@@ -1,7 +1,7 @@
 # SPEC-026: Yuri: chutes em pé remapeados
 
 - **Status:** Implementado, aguardando teste em emulador
-- **Patch:** `patches/global/normal-remap` (seção da Yuri; antes `characters/yuri/kick-remap`, ver SPEC-030)
+- **Patch:** `patches/characters/yuri/kick-remap` (hook compartilhado `$1D41E`, `charlib.KICK_SELECT`; o Robert tem o próprio, SPEC-030)
 
 ## Comportamento desejado
 

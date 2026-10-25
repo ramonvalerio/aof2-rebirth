@@ -61,52 +61,127 @@ def restore_rompaths():
 
 
 class Launcher(tk.Tk):
+    """Categorias à esquerda (Globais + um item por personagem, com a contagem
+    de marcados); patches da categoria escolhida à direita, com rolagem e
+    busca. A janela não cresce com o número de patches."""
+
     def __init__(self):
         super().__init__()
         self.title("AOF2 Rebirth")
-        self.minsize(460, 320)
+        self.geometry("820x560")
+        self.minsize(640, 420)
+
+        self.vars = {}     # chave do patch -> BooleanVar
+        self.titles = {}   # chave do patch -> título sem o prefixo "Personagem: "
+        self.groups = {}   # nome da categoria -> [chaves]
+        for k in manifest_ids():
+            scope, char = scope_of(k)
+            group = "Globais" if scope == "global" else char.capitalize()
+            self.groups.setdefault(group, []).append(k)
+            title = load_patch(k).title
+            prefix = group + ": "
+            if title.startswith(prefix):
+                title = title[len(prefix)].upper() + title[len(prefix) + 1:]
+            self.titles[k] = title
+            var = tk.BooleanVar(value=True)
+            var.trace_add("write", lambda *_: self.refresh_counts())
+            self.vars[k] = var
 
         frm = ttk.Frame(self, padding=12)
         frm.pack(fill="both", expand=True)
+        frm.columnconfigure(1, weight=1)
+        frm.rowconfigure(0, weight=1)
 
-        # Globais: botões e mecânicas que valem para todos os personagens.
-        # Personagens: alterações de um personagem específico.
-        self.vars = {}
-        keys = manifest_ids()
-        globals_ = [k for k in keys if scope_of(k)[0] == "global"]
-        chars = {}
-        for k in keys:
-            scope, char = scope_of(k)
-            if scope == "character":
-                chars.setdefault(char, []).append(k)
+        # ---- categorias
+        side = ttk.Frame(frm)
+        side.grid(row=0, column=0, sticky="ns", padx=(0, 10))
+        ttk.Label(side, text="Categorias", font=("Segoe UI", 10, "bold")).pack(anchor="w")
+        self.cats = ttk.Treeview(side, show="tree", selectmode="browse", height=12)
+        self.cats.column("#0", width=170)
+        self.cats.pack(fill="y", expand=True, pady=(4, 0))
+        for g in self.groups:
+            self.cats.insert("", "end", iid=g)
+        self.cats.bind("<<TreeviewSelect>>", lambda _: self.show_patches())
 
-        self.section(frm, "Globais (todos os personagens)", globals_)
-        ttk.Label(frm, text="Personagens", font=("Segoe UI", 11, "bold")).pack(anchor="w")
-        if not chars:
-            ttk.Label(frm, text="(nenhum patch de personagem ainda)",
-                      foreground="gray").pack(anchor="w", pady=(2, 10))
-        for char, ks in chars.items():
-            self.section(frm, char.capitalize(), ks, sub=True)
+        # ---- patches da categoria
+        main = ttk.Frame(frm)
+        main.grid(row=0, column=1, sticky="nsew")
+        main.columnconfigure(0, weight=1)
+        main.rowconfigure(1, weight=1)
 
+        bar = ttk.Frame(main)
+        bar.grid(row=0, column=0, sticky="ew")
+        ttk.Label(bar, text="Buscar:").pack(side="left")
+        self.query = tk.StringVar()
+        self.query.trace_add("write", lambda *_: self.show_patches())
+        ttk.Entry(bar, textvariable=self.query, width=28).pack(side="left", padx=(4, 10))
+        ttk.Button(bar, text="Marcar todos", command=lambda: self.set_visible(True)).pack(side="left")
+        ttk.Button(bar, text="Desmarcar todos", command=lambda: self.set_visible(False)).pack(side="left", padx=4)
+
+        box = ttk.Frame(main, relief="sunken", borderwidth=1)
+        box.grid(row=1, column=0, sticky="nsew", pady=(6, 0))
+        box.columnconfigure(0, weight=1)
+        box.rowconfigure(0, weight=1)
+        self.canvas = tk.Canvas(box, highlightthickness=0)
+        scroll = ttk.Scrollbar(box, orient="vertical", command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=scroll.set)
+        self.canvas.grid(row=0, column=0, sticky="nsew")
+        scroll.grid(row=0, column=1, sticky="ns")
+        self.list = ttk.Frame(self.canvas, padding=6)
+        win = self.canvas.create_window((0, 0), window=self.list, anchor="nw")
+        self.list.bind("<Configure>", lambda _: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
+        self.canvas.bind("<Configure>", lambda e: self.canvas.itemconfigure(win, width=e.width))
+        self.canvas.bind_all("<MouseWheel>", lambda e: self.canvas.yview_scroll(-e.delta // 120, "units"))
+
+        # ---- ações e log
         btns = ttk.Frame(frm)
-        btns.pack(fill="x")
+        btns.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(10, 0))
         self.btn_build = ttk.Button(btns, text="Criar ROM", command=self.on_build)
         self.btn_build.pack(side="left")
         self.btn_start = ttk.Button(btns, text="Start", command=self.on_start)
         self.btn_start.pack(side="left", padx=8)
+        self.total = ttk.Label(btns, foreground="gray")
+        self.total.pack(side="right")
 
-        self.log = tk.Text(frm, height=8, state="disabled", font=("Consolas", 9))
-        self.log.pack(fill="both", expand=True, pady=(10, 0))
+        self.log = tk.Text(frm, height=7, state="disabled", font=("Consolas", 9))
+        self.log.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(10, 0))
 
-    def section(self, parent, title, keys, sub=False):
-        font = ("Segoe UI", 10, "bold") if sub else ("Segoe UI", 11, "bold")
-        ttk.Label(parent, text=title, font=font).pack(anchor="w", padx=(12 if sub else 0, 0))
-        box = ttk.Frame(parent)
-        box.pack(fill="x", pady=(2, 10), padx=(12 if sub else 0, 0))
+        self.refresh_counts()
+        self.cats.selection_set(next(iter(self.groups)))
+
+    def current_keys(self):
+        sel = self.cats.selection()
+        q = self.query.get().strip().lower()
+        if q:   # a busca vale para todas as categorias
+            return [k for ks in self.groups.values() for k in ks
+                    if q in self.titles[k].lower() or q in k.lower()]
+        return self.groups[sel[0]] if sel else []
+
+    def show_patches(self):
+        for w in self.list.winfo_children():
+            w.destroy()
+        keys = self.current_keys()
+        searching = bool(self.query.get().strip())
         for k in keys:
-            var = tk.BooleanVar(value=True)
-            self.vars[k] = var
-            ttk.Checkbutton(box, text=load_patch(k).title, variable=var).pack(anchor="w")
+            text = self.titles[k]
+            if searching:
+                scope, char = scope_of(k)
+                text = f"[{'Globais' if scope == 'global' else char.capitalize()}] {text}"
+            ttk.Checkbutton(self.list, text=text, variable=self.vars[k]).pack(anchor="w", pady=1)
+        if not keys:
+            ttk.Label(self.list, text="(nenhum patch)", foreground="gray").pack(anchor="w")
+        self.canvas.yview_moveto(0)
+
+    def set_visible(self, value):
+        for k in self.current_keys():
+            self.vars[k].set(value)
+
+    def refresh_counts(self):
+        for g, ks in self.groups.items():
+            on = sum(self.vars[k].get() for k in ks)
+            self.cats.item(g, text=f"{g}  ({on}/{len(ks)})")
+        on = sum(v.get() for v in self.vars.values())
+        self.total.configure(text=f"{on} de {len(self.vars)} patches marcados")
 
     def write(self, msg):
         def append():

@@ -36,10 +36,6 @@ Os globais são aplicados antes dos de personagem.
 | `persistent-bruises` (rosto machucado continua nos rounds seguintes da mesma luta) | [SPEC-014](../src/backend/specs/SPEC-014-persistent-bruises.md) |
 | `rush-specials-true-combo` (especiais de sequência — Renbuken do Ryo, Robert, Takuma, Eiji e Yuri — com todos os hits em combo) | [SPEC-015](../src/backend/specs/SPEC-015-rush-specials-true-combo.md) |
 | `jump-instant` (pulo sai na hora: quadro parado inicial de 2-3 → 1 frame; zera a velocidade de andar) | [SPEC-023](../src/backend/specs/SPEC-023-jump-instant.md) |
-| `multi-hit-rearm` (especiais que prendem e batem várias vezes contam cada hit: Ryo Zanretsuken 19, Yuri Hyakuretsu Binta 10) | [SPEC-027](../src/backend/specs/SPEC-027-multi-hit-rearm.md), [SPEC-025](../src/backend/specs/SPEC-025-ryo-zanretsuken-19-hits.md) |
-| `desperation-ryo-command` (DESPERATION de Robert, Takuma e Yuri com o comando do Ryo: ↓↘→↘↓↙← + C) | [SPEC-028](../src/backend/specs/SPEC-028-desperation-ryo-command.md) |
-| `normal-remap` (chutes em pé por personagem — Yuri: B = forte perto, frente+B = bundada, trás+D = fraco com dano forte; Robert: frente+B = forte perto overhead, trás+D = forte longe, D neutro = fraco com dano forte, chute forte do dash derruba) | [SPEC-026](../src/backend/specs/SPEC-026-yuri-kick-remap.md), [SPEC-030](../src/backend/specs/SPEC-030-robert-kick-remap.md) |
-| `normal-chains` (ao conectar, por personagem — Ryo: baixo B → chute, soco forte perto → B+D; Robert: soco forte perto → B+D) | [SPEC-018](../src/backend/specs/SPEC-018-ryo-crouch-kick-combo.md), [SPEC-020](../src/backend/specs/SPEC-020-ryo-normal-chains.md), [SPEC-031](../src/backend/specs/SPEC-031-robert-close-hp-chain.md) |
 
 ## Personagens
 
@@ -50,10 +46,23 @@ Os globais são aplicados antes dos de personagem.
 | Ryo | `kohou-weak-short` (Kohou fraco: sobe pouco, 1 hit, derruba) | [SPEC-010](../src/backend/specs/SPEC-010-ryo-kohou-weak-short.md) |
 | Ryo | `overhead-kick` (overhead em frente + B, chute forte longe em trás + D, D neutro novo) | [SPEC-016](../src/backend/specs/SPEC-016-ryo-overhead-kick.md) |
 | Ryo | `renbuken-juggle` (Renbuken gasta 20% e recupera rápido depois do 4º hit; juggle pendente) | [SPEC-017](../src/backend/specs/SPEC-017-ryo-renbuken-juggle.md) |
-| Ryo | `hitstun-extra` (pulo com soco forte: +12 de hitstun e aterrissagem 20 → 7; soco forte agachado com a vantagem do soco forte perto) | [SPEC-019](../src/backend/specs/SPEC-019-ryo-jump-punch-hitstun.md), [SPEC-024](../src/backend/specs/SPEC-024-ryo-crouch-punch-advantage.md) |
+| Ryo | `crouch-punch-advantage` (soco forte agachado com a vantagem do soco forte perto) | [SPEC-024](../src/backend/specs/SPEC-024-ryo-crouch-punch-advantage.md) |
 | Ryo | `haoh-easy-input` (Haoh Shoukouken: frente, trás, baixo, frente + soco, diagonais aceitas, 20 frames por passo) | [SPEC-021](../src/backend/specs/SPEC-021-ryo-haoh-easy-input.md) |
 | Ryo | `hien-weak-startup` (Hien Shippuukyaku fraco: arranque de 12 → 1 frame) | [SPEC-022](../src/backend/specs/SPEC-022-ryo-hien-weak-startup.md) |
+| Ryo | `normal-chains` (ao conectar: baixo B → chute, soco forte perto → B+D) | [SPEC-018](../src/backend/specs/SPEC-018-ryo-crouch-kick-combo.md), [SPEC-020](../src/backend/specs/SPEC-020-ryo-normal-chains.md) |
+| Ryo | `zanretsuken-19-hits` (Zanretsuken conta cada golpe: 19 hits) | [SPEC-025](../src/backend/specs/SPEC-025-ryo-zanretsuken-19-hits.md) |
+| Ryo | `standing-lk-frames` (chute fraco em pé com startup, ativo e recovery do soco fraco em pé) | [SPEC-032](../src/backend/specs/SPEC-032-ryo-standing-lk-frames.md) |
 | Robert | `ryuga-weak-short` (Ryuga fraco: sobe pouco, 1 hit, derruba, como o Kohou fraco do Ryo) | [SPEC-029](../src/backend/specs/SPEC-029-robert-ryuga-weak-short.md) |
+| Robert | `kick-remap` (frente+B = forte perto overhead, trás+D = forte longe, D neutro = fraco com dano forte, chute forte do dash derruba) | [SPEC-030](../src/backend/specs/SPEC-030-robert-kick-remap.md) |
+| Robert | `close-hp-chain` (soco forte perto → B+D ao conectar) | [SPEC-031](../src/backend/specs/SPEC-031-robert-close-hp-chain.md) |
+| Takuma | `desperation-ryo-command` (DESPERATION com o comando do Ryo: ↓↘→↘↓↙← + C) | [SPEC-028](../src/backend/specs/SPEC-028-desperation-ryo-command.md) |
+| Yuri | `kick-remap` (B = forte perto, frente+B = bundada, trás+D = fraco com dano forte) | [SPEC-026](../src/backend/specs/SPEC-026-yuri-kick-remap.md) |
+| Yuri | `hyakuretsu-binta-10-hits` (Hyakuretsu Binta conta cada tapa: 10 hits) | [SPEC-027](../src/backend/specs/SPEC-027-multi-hit-rearm.md) |
+| Yuri | `desperation-ryo-command` (DESPERATION com o comando do Ryo: ↓↘→↘↓↙← + C) | [SPEC-028](../src/backend/specs/SPEC-028-desperation-ryo-command.md) |
+
+## Hooks compartilhados
+
+Um patch de personagem tem uma responsabilidade só, mesmo quando o ponto do motor que ele altera também é usado por outros personagens. Esses pontos ficam em [tools/charlib.py](../tools/charlib.py) (`KICK_SELECT`, `MOVE_RECORD`, `ATTACK_WINDOW`, `ATTACK_STATE`): cada patch declara `shared_hook(<endereço>, "<bloco>")`, começa o bloco com `only(<personagem>, <endereço>)` e termina com `JmpNext(<endereço>)`. O build grava um único `jmp` no jogo e liga os blocos em sequência (ordem do manifest), terminando no código original deslocado.
 
 ## Criar um patch
 
