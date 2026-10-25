@@ -13,6 +13,9 @@ Como o especial detectado fica até 60 frames em $218(a6) antes de executar,
 a força é registrada na detecção ($1E102), nos bits altos de $218:
   bit 9 = comando vindo do leitor de comandos do jogador (força pelo botão)
   bit 8 = botão forte ($271 bit 4/5 no frame da detecção)
+  bit 10 = soco fraco + soco forte juntos ($270 & $50 = $50); só informação:
+           a escolha de nível aqui não muda (cai no fraco); usado por patches
+           de personagem (ex.: ryo/kououken-three-buttons)
 $1D41E já descarta esses bits (andi.w #$7f). Comandos sem o bit 9 (IA)
 seguem a regra original da barra.
 
@@ -38,6 +41,15 @@ tag_command = [
     Label("strong"),
     Ins("00400100", "ori.w #$100, d0"),
     Label("store"),
+    # bit 10 = soco fraco + soco forte juntos ($270 bits 4 + 6, par do tradutor, SPEC-002)
+    Ins("2f01", "move.l d1, -(a7)"),
+    Ins("122e0270", "move.b $270(a6), d1"),
+    Ins("02010050", "andi.b #$50, d1"),
+    Ins("0c010050", "cmpi.b #$50, d1"),
+    Branch("bne", "save"),
+    Ins("00400400", "ori.w #$400, d0"),
+    Label("save"),
+    Ins("221f", "move.l (a7)+, d1"),
     Ins("3d400218", "move.w d0, $218(a6)"),
     Ins("1d7c003c0a77", "move.b #$3c, $a77(a6)"),
     JmpAbs(AFTER_DETECT),

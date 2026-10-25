@@ -28,6 +28,12 @@ ATTACK_WINDOW = 0x1C066
 # Começo do estado de ataque. Os blocos rodam DEPOIS do original.
 ATTACK_STATE = 0x1C1DA
 
+# $1D676: btst.b #4,$60(a6)  (segue no beq de $1D67C)
+# Especial com versão já escolhida ($10(a5) = golpe, $5C(a4) = nível; $218
+# ainda tem as marcas do botão, SPEC-004). Os blocos rodam ANTES do original
+# e podem trocar a versão.
+SPECIAL_CHOSEN = 0x1D676
+
 _SHARED = {
     KICK_SELECT: ("0244007f3b440020", "before", [
         Ins("0244007f", "andi.w #$7f, d4"),
@@ -39,6 +45,9 @@ _SHARED = {
     ]),
     ATTACK_WINDOW: ("082e0004003f", "before", [
         Ins("082e0004003f", "btst.b #$4, $3f(a6)"),
+    ]),
+    SPECIAL_CHOSEN: ("082e00040060", "before", [
+        Ins("082e00040060", "btst.b #$4, $60(a6)"),
     ]),
     ATTACK_STATE: ("42ae00204eba1d9e", "after", [
         Ins("42ae0020", "clr.l $20(a6)"),

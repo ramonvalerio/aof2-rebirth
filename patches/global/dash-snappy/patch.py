@@ -7,7 +7,7 @@ O dash dispara os comandos 4 (frente) e 5 (trás) em $1BC98/$1BCA2; os
 handlers $1E290/$1E2E0 usam o id da lista como animação e põem o jogador no
 estado 16/17 ($1BCAC/$1BCE4). Nesse estado:
   - ataques e especiais já podem sair a qualquer momento (jsr $1D808);
-  - soltar/trocar a direção ou o fim da animação encerra o dash (comando 1);
+  - trocar a direção (sem contar baixo) ou o fim da animação encerra o dash (comando 1);
   - a velocidade ($1BD2C, tabela $1BD5C por personagem, ex.: 8,5 px/f) é
     ZERO nos quadros com flag $40.
 As animações têm quadros $40 de 4 frames no início e no fim (ex.: Ryo
@@ -32,10 +32,14 @@ a direção nova é só <- ou -> (sem cima/baixo), registram esse toque como
 1º toque pendente antes de encerrar. O 2º toque, já no neutro, dispara o
 dash na direção nova.
 
-Dash encadeado na mesma direção: soltar a direção durante o dash (d0 = 0)
-também encerra o dash, e o mesmo hook arma o 1º toque pendente com a
-direção atual ($213 mantido). Basta tocar de novo a mesma direção dentro
-de 16 frames para sair outro dash — dá para emendar vários seguidos.
+Soltar a direção NÃO encerra o dash ($1BCD4: andi #$f / beq continua);
+o hook só roda com alguma direção segurada. Nele:
+  - baixo é ignorado (andi #$d): baixo / baixo-frente não cancelam o dash;
+    e antes do jsr $1D808 do estado ($1BCC4/$1BCFC) o baixo sai de $270/$271,
+    senão $1D808 agachava e interrompia o dash (golpe no dash = golpe em pé);
+  - mesma direção com borda de aperto ($69) = toque novo durante o dash:
+    dash novo na hora (comando 4 frente / 5 trás via $1D41E), o que permite
+    emendar vários dashes seguidos (solta e toca de novo).
 """
 from asm68k import Branch, Ins, JmpAbs, Label
 from patchlib import Block, Data, Hook, Patch
@@ -143,26 +147,47 @@ STOP_FRAMES = [
 ]
 
 
-def redirect(continue_at):
-    """Substitui: cmp.b $213(a6),d0 / bne.w $1BD1C (d0 = direções seguradas)."""
+def redirect(continue_at, dash_cmd):
+    """Substitui: cmp.b $213(a6),d0 / bne.w $1BD1C (d0 = direções seguradas, != 0)."""
     return [
+        Ins("0200000d", "andi.b #$d, d0"),            # baixo não conta
+        Branch("beq", "same"),                        # só baixo: continua o dash
         Ins("b02e0213", "cmp.b $213(a6), d0"),
-        Branch("beq", "same"),
-        Ins("4a00", "tst.b d0"),                      # soltou a direção
-        Branch("beq", "arm"),
+        Branch("beq", "same_dir"),
         Ins("0c000004", "cmpi.b #$4, d0"),            # só <-
         Branch("beq", "tap"),
         Ins("0c000008", "cmpi.b #$8, d0"),            # só ->
         Branch("bne", "end"),
         Label("tap"),
         Ins("1d400213", "move.b d0, $213(a6)"),       # 1º toque da direção nova
-        Label("arm"),                                 # soltou: $213 = direção atual
         Ins("1d7c00010212", "move.b #$1, $212(a6)"),
         Ins(f"3d7c{TAP_WINDOW:04x}0210", f"move.w #${TAP_WINDOW:x}, $210(a6)"),
         Label("end"),
         JmpAbs(0x1BD1C),                              # encerra o dash (comando 1)
+        Label("same_dir"),
+        Ins("102e0069", "move.b $69(a6), d0"),        # apertou de novo a direção do dash?
+        Ins("c02e0213", "and.b $213(a6), d0"),
+        Branch("beq", "same"),
+        Ins(f"78{dash_cmd:02x}", f"moveq #${dash_cmd:x}, d4"),   # dash novo na mesma direção
+        Ins("4eb90001d41e", "jsr $1d41e.l"),
+        Ins("4e75", "rts"),
         Label("same"),
         JmpAbs(continue_at),
+    ]
+
+
+def no_crouch(continue_at, done_at):
+    """Substitui: jsr $1d808(pc) / bne.w <rts>  (golpes durante o dash).
+    $1D808 via baixo segurado e agachava, interrompendo o dash. Tira o baixo
+    de $270/$271 (recalculados do joystick a cada frame) antes de chamar."""
+    return [
+        Ins("022e00fd0270", "andi.b #$fd, $270(a6)"),
+        Ins("022e00fd0271", "andi.b #$fd, $271(a6)"),
+        Ins("4eb90001d808", "jsr $1d808.l"),
+        Branch("bne", "started"),
+        JmpAbs(continue_at),
+        Label("started"),
+        JmpAbs(done_at),                              # golpe começou (rts)
     ]
 
 
@@ -172,14 +197,19 @@ PATCH = Patch(
     spec="src/backend/specs/SPEC-011-dash-snappy.md",
     blocks=[
         Block("double_tap", double_tap),
-        Block("dash_fwd_redirect", redirect(0x1BCDE)),
-        Block("dash_back_redirect", redirect(0x1BD16)),
+        Block("dash_fwd_redirect", redirect(0x1BCDE, 4)),
+        Block("dash_back_redirect", redirect(0x1BD16, 5)),
+        Block("dash_fwd_no_crouch", no_crouch(0x1BCCC, 0x1BCE2)),
+        Block("dash_back_no_crouch", no_crouch(0x1BD04, 0x1BD1A)),
     ],
     hooks=[
         Hook(addr=0x1CCDA, expect="7000102e0212", to_block="double_tap"),
         # $1BCD6 / $1BD0E: cmp.b $213(a6),d0 / bne.w $1bd1c
         Hook(addr=0x1BCD6, expect="b02e021366000040", to_block="dash_fwd_redirect"),
         Hook(addr=0x1BD0E, expect="b02e021366000008", to_block="dash_back_redirect"),
+        # $1BCC4 / $1BCFC: jsr $1d808(pc) / bne.w (rts)
+        Hook(addr=0x1BCC4, expect="4eba1b4266000018", to_block="dash_fwd_no_crouch"),
+        Hook(addr=0x1BCFC, expect="4eba1b0a66000018", to_block="dash_back_no_crouch"),
     ],
     data=[Data(addr, f"{old:02x}", f"{new:02x}") for addr, old, new in STOP_FRAMES],
 )
