@@ -45,6 +45,18 @@ mudam.
 
 A flag fica em `$3DA`, na faixa livre do registro ($39B–$3DE).
 
+## Retrato grande
+
+O retrato da seleção ($C940) e o do "select enemy" ($E196) leem a tabela
+$C96C (bloco, metade) por personagem e cor e chamam $D81A, que copia as
+paletas 5 e 6 da metade (+$180 se metade 1, +$F0). Usam os mesmos blocos da
+luta; o $4D é só do Ryo.
+
+- **$C962 / $E1B6**: bloco $4D, metade 1 e flag no registro (`$1C(a6)`) →
+  pede o bloco $FE.
+- **$D828**: bloco $FE lê as paletas 5–6 pretas (96 bytes no patch); o
+  endereço é ajustado para $D81A somar $180 + $F0 de volta.
+
 ## Build
 
 A P-ROM não tinha mais espaço nas áreas reservadas. `tools/build_rom.py`
@@ -55,12 +67,10 @@ não mudam de lugar.
 
 ## Limites
 
-- O retrato da tela de seleção usa outra paleta (tabela $C96C por cor) e
-  continua azul com START; só a luta usa o preto.
 - Com o mesmo personagem dos dois lados, se o jogo trocar a cor 1 por outra,
   a flag não tem efeito (só vale com cor 1).
 
 ## Validação
 
-FBNeo: START na seleção → P1 Ryo de quimono preto com vermelhos; B →
-azul-claro original. Testar na MiSTer, como P2, e contra Ryo da CPU.
+FBNeo: START na seleção → retrato e P1 Ryo de quimono preto com
+vermelhos; B → azul-claro original. Testar na MiSTer, como P2, e contra Ryo da CPU.

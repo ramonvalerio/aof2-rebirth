@@ -112,16 +112,71 @@ loader = [
     Raw("".join(BLOCK)),
 ]
 
+# Retrato grande: tabela $C96C (bloco, metade) por personagem e cor; $D81A
+# copia as paletas 5 e 6 da metade (+$180 se metade 1, +$F0 = 5 paletas).
+# Bloco $4D é só do Ryo; metade 1 = cor 1. Com a flag, pede o bloco $FE.
+PORTRAIT_PALETTES = 0x180 + 5 * 0x30            # paletas 5-6 da cor 1
+
+
+def portrait_request(resume):
+    """Substitui: move.w (a0)+,d5 / move.w (a0),d6 (+ a instrução seguinte)."""
+    return [
+        Ins("3a18", "move.w (a0)+, d5"),
+        Ins("3c10", "move.w (a0), d6"),
+        Ins("0c45004d", "cmpi.w #$4d, d5"),
+        Branch("bne", "done"),
+        Ins("0c460001", "cmpi.w #$1, d6"),
+        Branch("bne", "done"),
+        Ins("2f08", "move.l a0, -(a7)"),
+        Ins("206e001c", "movea.l $1c(a6), a0"),          # registro do jogador
+        Ins(f"4a28{FLAG:04x}", f"tst.b ${FLAG:x}(a0)"),
+        Ins("205f", "movea.l (a7)+, a0"),
+        Branch("beq", "done"),
+        Ins(f"3a3c{MAGIC >> 8:04x}", f"move.w #${MAGIC >> 8:x}, d5"),
+        Label("done"),
+        *resume,
+    ]
+
+
+# $C962: move.w (a0)+,d5 / move.w (a0),d6 / bsr.w $d81a (seguido de rts).
+select_portrait = portrait_request([JmpAbs(0xD81A)])
+
+# $E1B6: move.w (a0)+,d5 / move.w (a0),d6 / movem.l a6,-(a7) (retrato com a cor do cursor).
+enemy_portrait = portrait_request([Ins("48e70002", "movem.l a6, -(a7)"), JmpAbs(0xE1BE)])
+
+# $D828: movea.l $80(a5),a1 / lsl.w #8,d5 / adda.w d5,a1 (x3).
+portrait_loader = [
+    Ins(f"0c45{MAGIC >> 8:04x}", f"cmpi.w #${MAGIC >> 8:x}, d5"),
+    Branch("bne", "normal"),
+    LeaPc("palettes", 1),
+    Ins(f"92fc{PORTRAIT_PALETTES:04x}", f"suba.w #${PORTRAIT_PALETTES:x}, a1"),  # $D81A soma de volta
+    JmpAbs(0xD834),
+    Label("normal"),
+    Ins("226d0080", "movea.l $80(a5), a1"),
+    Ins("e14d", "lsl.w #$8, d5"),
+    Ins("d2c5", "adda.w d5, a1"),
+    Ins("d2c5", "adda.w d5, a1"),
+    Ins("d2c5", "adda.w d5, a1"),
+    JmpAbs(0xD834),
+    Label("palettes"),
+    Raw("".join(BLOCK)[PORTRAIT_PALETTES * 2:(PORTRAIT_PALETTES + 2 * 0x30) * 2]),
+]
+
 PATCH = Patch(
     id="black-gi-start",
     title="START na seleção: quimono preto com detalhes vermelhos",
     spec="src/backend/specs/SPEC-083-ryo-black-gi-start.md",
     blocks=[Block("select_start", select), Block("select_timeout", timeout),
-            Block("palette_request", request), Block("palette_loader", loader)],
+            Block("palette_request", request), Block("palette_loader", loader),
+            Block("select_portrait", select_portrait), Block("enemy_portrait", enemy_portrait),
+            Block("portrait_loader", portrait_loader)],
     hooks=[
         Hook(0xC7CE, "024000f067000076", to_block="select_start"),
         Hook(0xC75E, "303c001060000090", to_block="select_timeout"),
         Hook(0xA05E, "30fb00004e75", to_block="palette_request"),
         Hook(0x1D92, "246d0080d5c1d5c1d5c1", to_block="palette_loader"),
+        Hook(0xC962, "3a183c1061000eb2", to_block="select_portrait"),
+        Hook(0xE1B6, "3a183c1048e70002", to_block="enemy_portrait"),
+        Hook(0xD828, "226d0080e14dd2c5d2c5d2c5", to_block="portrait_loader"),
     ],
 )
