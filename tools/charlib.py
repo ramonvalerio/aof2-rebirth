@@ -10,7 +10,9 @@ from patchlib import Block, Data, Hook
 
 MOVE_TABLE = 0x023BA4   # 16 bytes por golpe
 
-RYO, ROBERT, TAKUMA, YURI = 1, 2, 10, 11   # $62
+RYO, ROBERT, TAKUMA, YURI = 1, 2, 10, 11
+JOHN, LEE, TEMJIN = 8, 5, 12
+MICKY = 7   # $62
 
 # $1D41E: andi.w #$7f,d4 / move.w d4,$20(a5)  (segue em $1D426)
 # Escolha do chute em pé: $1DC9E calcula d4 ($30 fraco longe, $31 forte
@@ -27,6 +29,8 @@ ATTACK_WINDOW = 0x1C066
 # $1C1DA: clr.l $20(a6) / jsr $1df7e(pc)  (segue em $1C1E2)
 # Começo do estado de ataque. Os blocos rodam DEPOIS do original.
 ATTACK_STATE = 0x1C1DA
+# Atualizacao de um quadro do sprite, depois dos comandos da animacao.
+ANIM_FRAME = 0x4A84
 
 # $1D676: btst.b #4,$60(a6)  (segue no beq de $1D67C)
 # Especial com versão já escolhida ($10(a5) = golpe, $5C(a4) = nível; $218
@@ -67,6 +71,10 @@ LANDING_ATTACK = 0x1C234
 REACTION_PUSH = 0x1CBB0
 
 _SHARED = {
+    ANIM_FRAME: ("2d48005008ee0007005e", "after", [
+        Ins("2d480050", "move.l a0, $50(a6)"),
+        Ins("08ee0007005e", "bset.b #$7, $5e(a6)"),
+    ]),
     LANDING_ATTACK: ("197c00010058", "before", [
         Ins("197c00010058", "move.b #$1, $58(a4)"),
     ]),

@@ -1,6 +1,6 @@
 """Ryo: tres versoes do Kohou — SPEC-062."""
 from asm68k import Branch, Ins, JmpAbs, JmpNext, Label, LeaPc
-from charlib import RYO, SPECIAL_CHOSEN, CMD_STEP, MOVE_TABLE, ATTACK_STATE, HIT_SOUND, only, shared_hook, player_sprite, rearm_children
+from charlib import RYO, SPECIAL_CHOSEN, CMD_STEP, MOVE_TABLE, ATTACK_STATE, HIT_SOUND, ANIM_FRAME, only, shared_hook, player_sprite, rearm_children
 from patchlib import Block, Data, Hook, Patch
 choose = [
     *only(RYO, SPECIAL_CHOSEN),
@@ -76,11 +76,7 @@ cancel = [
     Ins("3d7cff700038", "move.w #$ff70, $38(a6)"),
     Ins("206e0064", "movea.l $64(a6), a0"),
     Ins("3d7c017c006e", "move.w #$17c, $6e(a6)"),
-    Ins("0c6e00430230", "cmpi.w #$43, $230(a6)"), Branch("beq", "hien_return"),
-    Ins("217c000800000028", "move.l #$80000, $28(a0)"),
-    Ins("317cffc00038", "move.w #$ffc0, $38(a0)"),
-    LeaPc("return_pose",1), Ins("4ed1", "jmp (a1)"),
-    Label("hien_return"),
+    Ins("0c6e00430230", "cmpi.w #$43, $230(a6)"), Branch("bne", "manual_juggle"),
     # Hien: flip de retorno no mesmo X, sem o impulso horizontal para tras.
     Ins("3d7c011e006e", "move.w #$11e, $6e(a6)"),
     Ins("42ae0020", "clr.l $20(a6)"),
@@ -88,7 +84,8 @@ cancel = [
     Ins("426e0030", "clr.w $30(a6)"),
     Ins("426e0034", "clr.w $34(a6)"),
     Ins("422e0247", "clr.b $247(a6)"),
-    # Restauracao do relancamento do cancel manual do Hien.
+    Label("manual_juggle"),
+    # Juggle apenas ao consumir o cancel manual de Kohou ou Hien.
     Ins("217c000800000028", "move.l #$80000, $28(a0)"),
     Ins("317cffc00038", "move.w #$ffc0, $38(a0)"),
     Ins("08a80007003f", "bclr.b #$7, $3f(a0)"),
@@ -122,22 +119,20 @@ cancel = [
 # Segundo contato tem quadro proprio: rearme na troca REAL de quadro,
 # nao no estado do jogador (a animacao continua sendo atualizada no sprite).
 rearm = [
-    Ins("2d480050", "move.l a0, $50(a6)"),
-    Ins("08ee0007005e", "bset.b #$7, $5e(a6)"),
     Ins("0c6e017b0054", "cmpi.w #$17b, $54(a6)"), Branch("bne", "out"),
     Ins("0c2e0003005a", "cmpi.b #$3, $5a(a6)"), Branch("bne", "out"),
     Ins("48e78080", "movem.l d0/a0, -(a7)"),
     Ins("41d6", "lea.l (a6), a0"), *rearm_children(),
     Ins("4cdf0101", "movem.l (a7)+, d0/a0"),
-    Label("out"), JmpAbs(0x4A8E),
+    Label("out"), JmpNext(ANIM_FRAME),
 ]
 FRAME_LIST = 0x51DBC
 NEW_ANIM = 0x17B
 # Primeiro/segundo contato no chao; terceiro na subida. O segundo abre
 # o break; sem pedido, o lançamento original segue e termina derrubando.
 FRAMES = [(2,0x10,0x1141),(2,0x10,0x1142),(5,0x10,0x1143),
-          (1,0x10,0x1143),(0,0x30,0x51ded),(22,0,0x0ae9),
-          (4,0,0x0ae8),(6,0,0x0aec),(6,0,0x0aea),
+          (1,0x10,0x1143),(0,0x30,0x53645),(6,0,0x0ae8),
+          (6,0,0x0ae9),(6,0,0x0aec),(6,0,0x0aea),
           (0,0,0x0aeb),(6,0,0x5365a),(0,0x80,0x0605)]
 frames=bytearray()
 for k,(duration,flags,value) in enumerate(FRAMES):
@@ -163,10 +158,8 @@ for k,(duration,flags,value) in enumerate(BREAK_FRAMES):
 PATCH = Patch(id="kohou-three-buttons", title="Ryo: Kohou LP fraco, HP medio, LP+HP forte",
     spec="src/backend/specs/SPEC-062-ryo-kohou-three-buttons.md",
     blocks=[Block("kohou_buttons", choose), Block("kohou_pair_command", command), Block("kohou_cancel", cancel), Block("kohou_contacts", contact), Block("kohou_frame_rearm", rearm)],
-    hooks=[shared_hook(SPECIAL_CHOSEN,"kohou_buttons"), shared_hook(CMD_STEP,"kohou_pair_command"), shared_hook(ATTACK_STATE,"kohou_cancel"), shared_hook(HIT_SOUND,"kohou_contacts"), Hook(0x4A84,"2d48005008ee0007005e",to_block="kohou_frame_rearm")],
-    data=[# Lancamento exclusivo: sobe reto, sem ataque antes do terceiro.
-          Data(0x51ded,"00"*21,"deebdd01c7003ed20c000cc000ff70000000000ae9"),
-          Data(BREAK_LIST,"00"*len(break_frames),break_frames.hex()),
+    hooks=[shared_hook(SPECIAL_CHOSEN,"kohou_buttons"), shared_hook(CMD_STEP,"kohou_pair_command"), shared_hook(ATTACK_STATE,"kohou_cancel"), shared_hook(HIT_SOUND,"kohou_contacts"), shared_hook(ANIM_FRAME,"kohou_frame_rearm")],
+    data=[Data(BREAK_LIST,"00"*len(break_frames),break_frames.hex()),
           Data(0x50000+0x17c*4,"00000000",(len(BREAK_FRAMES)<<24|BREAK_LIST).to_bytes(4,'big').hex()),
           Data(FRAME_LIST,"00"*len(frames),frames.hex()),
           Data(0x50000+NEW_ANIM*4,"00000000",(len(FRAMES)<<24|FRAME_LIST).to_bytes(4,'big').hex()),

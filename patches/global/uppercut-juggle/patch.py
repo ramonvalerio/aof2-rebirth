@@ -4,7 +4,7 @@ Intercepta o efeito somente nos comandos $24/$26, contra alvo vivo no ar.
 Usa a reação aérea comum, sem a animação de queda/som de grito. As poses
 de cada defensor têm animações próprias para manter a janela de combo.
 """
-from asm68k import Branch, Ins, JmpAbs, Label
+from asm68k import Branch, Ins, JmpAbs, Label, LeaPc
 from patchlib import Block, Data, DataBlock, Hook, Patch
 
 ANIM_BASE = 0x780  # $781..$78F: entradas vazias, uma por defensor.
@@ -36,9 +36,28 @@ def animation(poses):
 
 
 reaction = [
-    Ins("0c6800010062", "cmpi.w #$1, $62(a0)"), Branch("bne", "normal_uppercut"),
-    Ins("0c6800470230", "cmpi.w #$47, $230(a0)"), Branch("bne", "normal_uppercut"),
-    Ins("0c28000303b4", "cmpi.b #$3, $3b4(a0)"), Branch("beq", "candidate"),
+    Ins("0c6800010062", "cmpi.w #$1, $62(a0)"), Branch("bne", "micky"),
+    Ins("0c6e00440a6a", "cmpi.w #$44, $a6a(a6)"), Branch("bne", "micky"),
+    Ins("082e0007024b", "btst.b #$7, $24b(a6)"), Branch("beq", "micky"),
+    Ins("2f09", "move.l a1, -(a7)"),LeaPc("restore_candidate",1),Ins("4ed1", "jmp (a1)"),
+    Label("micky"),
+    Ins("0c6800070062", "cmpi.w #$7, $62(a0)"), Branch("bne", "john"),
+    Ins("0c6e00400a6a", "cmpi.w #$40, $a6a(a6)"), Branch("bne", "john"),
+    Ins("082e0007024b", "btst.b #$7, $24b(a6)"), Branch("bne", "candidate"),
+    Label("john"),
+    Ins("0c6800080062", "cmpi.w #$8, $62(a0)"), Branch("bne", "robert"),
+    Ins("0c6800460230", "cmpi.w #$46, $230(a0)"), Branch("bne", "robert"),
+    Ins("4a2803bf", "tst.b $3bf(a0)"), Branch("beq", "robert"),
+    Ins("0c6804bc006e", "cmpi.w #$4bc, $6e(a0)"), Branch("bne", "robert"),
+    Ins("2f09", "move.l a1, -(a7)"),
+    Ins("7000", "moveq #$0, d0"),Ins("10280003", "move.b $3(a0), d0"),
+    Ins("e148", "lsl.w #$8, d0"),Ins("43f50000", "lea.l (a5, d0.w), a1"),
+    Ins("0c290006005a", "cmpi.b #$6, $5a(a1)"),
+    Ins("225f", "movea.l (a7)+, a1"), Branch("bcc", "candidate"),
+    Label("robert"),
+    Ins("0c6800020062", "cmpi.w #$2, $62(a0)"), Branch("bne", "normal_uppercut"),
+    Ins("0c6800310230", "cmpi.w #$31, $230(a0)"), Branch("bne", "normal_uppercut"),
+    Ins("0c28000303be", "cmpi.b #$3, $3be(a0)"), Branch("beq", "candidate"),
     Label("normal_uppercut"),
     Ins("0c6800240230", "cmpi.w #$24, $230(a0)"),
     Branch("beq", "uppercut"),
@@ -47,6 +66,8 @@ reaction = [
     Label("uppercut"),
     Ins("4aae0018", "tst.l $18(a6)"),
     Branch("ble", "original"),
+    Branch("bra", "candidate"),
+    Label("restore_candidate"), Ins("225f", "movea.l (a7)+, a1"),
     Label("candidate"),
     Ins("4a6e006c", "tst.w $6c(a6)"),
     Branch("ble", "original"),
@@ -73,7 +94,14 @@ reaction = [
     Ins("4eb900020604", "jsr $20604.l"),
     Ins("302e0062", "move.w $62(a6), d0"),
     Ins("06400780", "addi.w #$780, d0"),
-    Ins("0c6800470230", "cmpi.w #$47, $230(a0)"), Branch("bne", "pose_selected"),
+    Ins("0c6800070062", "cmpi.w #$7, $62(a0)"), Branch("bne", "non_micky_pose"),
+    Ins("0c6e00400a6a", "cmpi.w #$40, $a6a(a6)"), Branch("bne", "non_micky_pose"),
+    Ins("082e0007024b", "btst.b #$7, $24b(a6)"), Branch("bne", "fall_pose"),
+    Label("non_micky_pose"),
+    Ins("0c6800310230", "cmpi.w #$31, $230(a0)"), Branch("beq", "fall_pose"),
+    Ins("0c6800460230", "cmpi.w #$46, $230(a0)"), Branch("beq", "fall_pose"),
+    Ins("0c6e00440a6a", "cmpi.w #$44, $a6a(a6)"), Branch("bne", "pose_selected"),
+    Label("fall_pose"),
     Ins("06400010", "addi.w #$10, d0"),
     Label("pose_selected"),
     Ins("3d40006e", "move.w d0, $6e(a6)"),
@@ -86,11 +114,21 @@ reaction = [
     Ins("426e0034", "clr.w $34(a6)"),
     Ins("203c00060000", "move.l #$60000, d0"),
     Ins("0c6e0791006e", "cmpi.w #$791, $6e(a6)"), Branch("bcs", "velocity_selected"),
-    Ins("203c000c0000", "move.l #$c0000, d0"),
+    Ins("203c00080000", "move.l #$80000, d0"),
     Label("velocity_selected"),
     Ins("2d400028", "move.l d0, $28(a6)"),
     Ins("29400028", "move.l d0, $28(a4)"),
     Ins("3d7cff800038", "move.w #$ff80, $38(a6)"),
+    Ins("0c6800070062", "cmpi.w #$7, $62(a0)"), Branch("bne", "non_micky_speed"),
+    Ins("0c6e00400a6a", "cmpi.w #$40, $a6a(a6)"), Branch("bne", "non_micky_speed"),
+    Ins("082e0007024b", "btst.b #$7, $24b(a6)"), Branch("bne", "slow_fall"),
+    Label("non_micky_speed"),
+    Ins("0c6800310230", "cmpi.w #$31, $230(a0)"), Branch("beq", "slow_fall"),
+    Ins("0c6800460230", "cmpi.w #$46, $230(a0)"), Branch("beq", "slow_fall"),
+    Ins("0c6e00440a6a", "cmpi.w #$44, $a6a(a6)"), Branch("bne", "launch_done"),
+    Label("slow_fall"),
+    Ins("3d7cffc00038", "move.w #$ffc0, $38(a6)"),
+    Label("launch_done"),
     Ins("422e024b", "clr.b $24b(a6)"),
     Ins("4e75", "rts"),
 ]

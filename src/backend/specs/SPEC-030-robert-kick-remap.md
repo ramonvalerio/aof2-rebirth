@@ -53,3 +53,7 @@ O hook `$1D75C` dá ao `$3D` um registro próprio: cópia do `$038` com efeito (
 - [ ] Trocando de lado, as direções acompanham
 - [ ] Dash + D: o oponente cai como na rasteira (baixo D)
 - [ ] Dash + B: igual ao original
+
+Variante adicional (SPEC-068): dash + dois chutes seleciona rasteira EX com juggle por 20% de Spirit. Dash + HK sozinho mantém o registro de queda desta spec.
+
+Atualização SPEC-069: frente+chute fraco é overhead somente na descida; subida usa propriedade normal e permite primeiro contato perto, completando dois hits com a descida. As caixas e a flag do segundo contato são nativas.

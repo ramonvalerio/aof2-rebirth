@@ -56,3 +56,5 @@ todo elenco, ambos os lados/P1/P2, centro/canto; soco fraco novo no contato
 com o chão e contador de combo. Conferir que ataques altos não ganham
 combo garantido, whiff mantém recuperação, defesa mantém recuo e que
 outros aéreos/cancels/dash de aterrissagem continuam funcionando.
+
+A variante aérea HP+HK compartilha o comando $3A, mas tem marca $3C0 e fica excluída dos benefícios específicos do LK desta spec (SPEC-076).

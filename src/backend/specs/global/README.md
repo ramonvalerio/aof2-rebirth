@@ -8,10 +8,12 @@ Os patches globais são aplicados antes dos patches de personagem.
 |---|---|
 | `crossup-close-pressure` | [Cross global: anula afastamento do hit](../SPEC-060-crossup-close-pressure.md) |
 | `landing-dash` | [Dash imediato ao aterrissar](../SPEC-056-landing-dash.md) |
+| `crouch-stand-dash` | [Dash imediato ao levantar do agachamento](../SPEC-081-crouch-stand-dash.md) |
+| `title-rebirth` | [REBIRTH na tela de título](../SPEC-082-title-rebirth.md) |
 | `controls-4button-layout` | [Controles: A/B chutes, C/D socos, A+C arremesso, C+D uppercut, B+D chute baixo, START provoca](../SPEC-002-controls-4button-layout.md) |
 | `free-special-moves` | [Especiais não gastam barra (SUPER e DESPERATION mantêm o custo)](../SPEC-003-free-special-moves.md) |
 | `special-strength-by-button` | [Força do especial pelo botão (fraco = barra vermelha, forte = barra cheia)](../SPEC-004-special-strength-by-button.md) |
-| `spirit-charge-abc` | [Carregar a barra exige A+B+C segurados juntos](../SPEC-005-spirit-charge-abc.md) |
+| `spirit-charge-abc` | [Carregar Spirit: soco fraco + chute fraco + chute forte](../SPEC-005-spirit-charge-abc.md) |
 | `special-cancel-input-buffer` | [Special cancel global (chão e ar) e buffer de comandos de 12 frames](../SPEC-008-special-cancel-input-buffer.md) |
 | `dash-snappy` | [Dash ágil: sem quadros parados e dois toques sem precisar passar pelo neutro](../SPEC-011-dash-snappy.md) |
 | `no-knockdown-normals` | [Golpe normal não derruba (só tontura e especiais)](../SPEC-012-no-knockdown-normals.md) |
@@ -48,3 +50,15 @@ cada spec. Os patches não documentam como confirmado o que falta testar.
 - [Fortes com dois botões: custo de 20%](../SPEC-063-two-button-strong-spirit-cost.md)
 
 - [Juggle atingível no alto](../SPEC-065-juggle-air-hurtbox.md)
+
+- [Grab errado com tentativa e recuperação vulnerável](../SPEC-066-throw-whiff-recovery.md)
+
+- [DESPERATION: finta global LP+LK na preparação](../SPEC-067-desperation-feint.md)
+
+- [HP+HK permitido no ar para todo o elenco](../SPEC-076-air-heavy-pair-kick.md)
+
+- [DESPERATION: invencibilidade, exceção para projétil DESPERATION e empate entre projéteis](../SPEC-080-desperation-priority.md)
+
+- [Dash imediato ao levantar do agachamento](../SPEC-081-crouch-stand-dash.md)
+
+- [REBIRTH na tela de título](../SPEC-082-title-rebirth.md)

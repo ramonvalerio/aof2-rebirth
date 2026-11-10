@@ -1,7 +1,7 @@
 # Auditoria dos danos do Ryo — ROM com patches ativos
 
 Gerado por `python tools/damage_audit.py`. Fonte: `rom/aof2r.zip`.
-SHA-256 da P-ROM em ordem 68k: `2545939f95c61469d78ce1d663f3676ce4608c467cd878f19d3d8d1b28e1fc91`.
+SHA-256 da P-ROM em ordem 68k: `025bdf7ca05ba577887ab3a5685020e88e7ab816ef08efdb1b770955ad22226b`.
 
 **Valores base dos registros, antes das escalas do motor. Nao sao HP medidos.**
 As duas colunas de cada par sao mostradas se diferentes.
@@ -52,6 +52,8 @@ Extras da tabela nao provam o total de hits: hooks, caixas e animacoes tambem co
 ## Patches considerados
 
 - `global/controls-4button-layout`
+- `global/desperation-feint`
+- `global/throw-whiff-recovery`
 - `global/free-special-moves`
 - `global/special-strength-by-button`
 - `global/spirit-charge-abc`

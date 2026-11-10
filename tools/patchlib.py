@@ -70,6 +70,19 @@ class Data:
 
 
 @dataclass
+class RomData:
+    """Bytes em outro arquivo do romset (ex.: "056-s1.s1", tiles da camada fix).
+
+    `offset` é a posição no arquivo como está no zip; `expect` (hex) confere
+    os bytes originais e `new` (bytes) tem o mesmo tamanho.
+    """
+    file: str
+    offset: int
+    expect: str
+    new: bytes
+
+
+@dataclass
 class Patch:
     id: str
     title: str
@@ -77,6 +90,7 @@ class Patch:
     blocks: list = field(default_factory=list)
     hooks: list = field(default_factory=list)
     data: list = field(default_factory=list)
+    rom_data: list = field(default_factory=list)
 
     def block_sizes(self):
         return {b.name: (b.size if isinstance(b, DataBlock) else size_of(b.program))

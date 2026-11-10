@@ -90,3 +90,13 @@ Atualização Kohou: velocidade vertical do defensor é 12 px/frame para acompan
 Hien forte automático: segundo contato $43 com estágio 3 entra diretamente no despacho de juggle $21344, a 8/-0,25. O flip do Ryo não altera mais a reação do adversário; ver SPEC-064.
 
 Restauração Hien manual: retirado $43 do despacho de juggle automático. Hien só relança ao consumir LP+LK no segundo acerto (SPEC-064). Kohou e uppercut preservados.
+
+Regra atual Kohou EX: sem cancel, reação original e três contatos; retirada a entrada automática $47 do despacho. Juggle de Kohou/Hien só é preparado pelo cancel manual (SPEC-062/SPEC-064).
+
+Robert: rasteira EX do dash ($3D com marca $3BE) usa poses de queda e juggle 8/-0,25, com custo proporcional próprio de 20% (SPEC-068). Sem marca, a rasteira mantém queda normal.
+
+Robert EX automático: juggle agora exige comando $31 e estágio $3BE=3, após a rasteira inicial $3D. O primeiro contato não lança; HK normal sem marca não recebe juggle (SPEC-071).
+
+John EX: Overdrive Kick $44 com marca $3BF lança no quadro final da $6A1, usando poses de queda e 8/-0,25 (SPEC-074). Contatos anteriores seguem originais.
+
+Burning Upper EX do Micky: o projétil transporta a marca no bit 7 do efeito e o despacho identifica dono 7/comando de fonte $40; acerto real lança com poses de queda e 8/-0,25 (SPEC-077). Não depende da ação atual do dono.

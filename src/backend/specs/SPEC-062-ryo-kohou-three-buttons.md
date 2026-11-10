@@ -133,3 +133,28 @@ Caixa de dano durante o juggle alto: SPEC-065 mantém o corpo atingível sem mud
 Regra atual do Hien (SPEC-064): retorno vertical automático, sem LP+LK, inclusive ao defender/errar. O compartilhamento do bloco não altera o cancelamento manual LP+LK do Kohou. Relançamento Hien só em acerto com alvo vivo.
 
 Restauração solicitada: Hien voltou ao cancel manual LP+LK no segundo acerto, como o Kohou. Removidos retorno e juggle automáticos; regra vigente em SPEC-064.
+
+## Regra vigente: EX completo sem lançamento em juggle
+
+Sem cancelamento, o adversário mantém a reação original do Kohou: não
+acompanha o Ryo em juggle. O EX mantém primeiro/segundo contato no chão
+(com quadro próprio e rearme no índice 3); o lançamento original $53645
+com peça $0AE8 aplica o terceiro contato imediatamente no começo da
+subida e derruba pelo efeito original $01. Retirados a espera de 22
+frames no alto e o lançamento exclusivo $51DED. O Ryo mantém a trajetória
+original do Kohou nesse caminho, incluindo velocidade X nativa.
+
+Removida a entrada $47 do despacho automático de juggle da SPEC-043.
+Somente ao apertar LP+LK no segundo acerto, o bloco de cancel converte
+o adversário à reação aérea com poses de queda, 8/-0,25 e recuo zero.
+A animação curta $17C do Ryo e a queda lenta permanecem nesse cancel.
+Hien mantém o cancel manual com flip vertical pela SPEC-064. Custo EX
+continua 20%; fraco/médio e dano por contato não mudam.
+
+Verificado: build, hooks, ponteiro ao lançamento original, peça de ataque
+no terceiro contato, recuperação sem ataque e retirada do lançamento
+automático; auditoria de dano regenerada. Confirmar na partida os três
+hits completos sem levantar o adversário em juggle e os dois hits +
+cancel → juggle na continuação.
+
+Hook de quadro $4A84 convertido para ANIM_FRAME compartilhado para coexistir com a fase de overhead do Robert (SPEC-069). O rearme do Kohou continua apenas na animação $17B/quadro 3, com original executado uma vez.

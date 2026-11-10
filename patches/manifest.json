@@ -3,6 +3,9 @@
   "output": "aof2r",
   "global": [
     "controls-4button-layout",
+    "air-heavy-pair-kick",
+    "desperation-feint",
+    "throw-whiff-recovery",
     "free-special-moves",
     "special-strength-by-button",
     "spirit-charge-abc",
@@ -20,7 +23,10 @@
     "low-health-super-guard-pain",
     "directional-only-special-buffer",
     "landing-dash",
-    "crossup-close-pressure"
+    "crouch-stand-dash",
+    "crossup-close-pressure",
+    "desperation-priority",
+    "title-rebirth"
   ],
   "characters": {
     "ryo": [
@@ -35,6 +41,7 @@
       "hien-three-buttons-break",
       "normal-chains",
       "lp-hp-hk-target-combo",
+      "zanretsuken-three-buttons",
       "zanretsuken-19-hits",
       "standing-lk-frames",
       "jump-lk-pressure",
@@ -46,10 +53,17 @@
       "kohou-impact-sound",
       "kououken-impact-sound",
       "close-hp-kououken-target-combo",
-      "desperation-command"
+      "desperation-command",
+      "black-gi-start"
     ],
     "robert": [
       "ryuga-weak-short",
+      "standing-lk-frames",
+      "rising-kick-overhead",
+      "dash-kick-juggle",
+      "dash-ex-input-priority",
+      "dash-ex-back-hk-chain",
+      "dash-ex-impact-sound",
       "kick-remap",
       "close-hp-chain",
       "ryugekiken-three-buttons",
@@ -69,10 +83,16 @@
       "cross-diving-three-buttons"
     ],
     "micky": [
+      "burning-upper-three-buttons",
+      "close-hp-heavy-pair-chain",
       "crouching-heavy-kick-knockdown"
     ],
     "eiji": [
       "crouching-heavy-kick-knockdown"
+    ],
+    "john": [
+      "air-heavy-kick-remap",
+      "overdrive-ex-juggle"
     ],
     "yuri": [
       "kick-remap",

@@ -33,6 +33,12 @@ pressão na aterrissagem para todo o elenco ([SPEC-060](../src/backend/specs/SPE
 `landing-dash`: reconhece direcionais no fim do salto para iniciar dash
 no primeiro frame de chão ([SPEC-056](../src/backend/specs/SPEC-056-landing-dash.md)).
 
+`crouch-stand-dash`: lê os dois toques ao soltar o baixo e durante a animação
+de levantar, iniciando o dash sem esperar o neutro ([SPEC-081](../src/backend/specs/SPEC-081-crouch-stand-dash.md)).
+
+`title-rebirth`: escreve REBIRTH sob o logo do título na fonte dos nomes da
+seleção; usa tiles fix novos na S-ROM via `RomData` ([SPEC-082](../src/backend/specs/SPEC-082-title-rebirth.md)).
+
 `directional-only-special-buffer`: buffer só de direcionais, exigindo botão
 novo na saída da defesa/recuperação ([SPEC-052](../src/backend/specs/SPEC-052-directional-only-special-buffer.md)).
 
@@ -116,3 +122,39 @@ Um patch de personagem tem uma responsabilidade só, mesmo quando o ponto do mot
 - Ryo: `hien-three-buttons-break` — dois chutes para forte, break LP+LK no segundo hit, flip vertical e relançamento (SPEC-064).
 
 - Global: `juggle-air-hurtbox` — preserva caixa de dano enquanto o alvo sobe/cai em juggle de Kohou/Hien (SPEC-065).
+
+- Global: `throw-whiff-recovery` — grab errado mostra poses próprias e deixa 18 frames de recuperação vulnerável (SPEC-066).
+
+- Global: `desperation-feint` — LP+LK cancela preparação do DESPERATION e restitui Spirit antes de ataque/projétil/contato (SPEC-067).
+
+- Robert: `dash-kick-juggle` — frente, frente + dois chutes lança em juggle por 20% de Spirit; HK sozinho continua derrubando (SPEC-068).
+
+- Robert: `rising-kick-overhead` — frente+LK com subida normal e descida overhead, aproveitando os dois contatos nativos de perto (SPEC-069).
+
+- Robert: `standing-lk-frames` — LK neutro com startup 2 e recuperação 1, preservando overhead, HK neutro e dash (SPEC-070).
+
+- Robert: `dash-ex-back-hk-chain` — rasteira EX conecta em trás+HK após acerto, formando dois hits sem custo adicional (SPEC-071).
+
+- Robert: `dash-ex-input-priority` — prioriza EX de dois chutes no dash para frente sobre Geneikyaku pendente (SPEC-072).
+
+- Robert: `dash-ex-impact-sound` — estalo pesado no chute final do EX de dash (SPEC-073).
+
+- John: `overdrive-ex-juggle` — Overdrive Kick EX de dois chutes lança em juggle no último contato (SPEC-074).
+
+- John: `air-heavy-kick-remap` — HK no ar usa a rasteira; baixo+HK no ar mantém o chute aéreo original (SPEC-075).
+
+- Global: `air-heavy-pair-kick` — HP+HK no ar usa o golpe próprio de cada personagem, mantendo o comando no chão (SPEC-076).
+
+- Micky: `burning-upper-three-buttons` — LP fraco, HP médio, LP+HP EX com juggle e custo global 20% (SPEC-077).
+
+- Micky: `close-hp-heavy-pair-chain` — HP perto encadeia em HP+HK, que derruba (SPEC-078).
+
+- Ryo: `zanretsuken-three-buttons` — LP termina em HP neutro, HP no gancho original, dois socos em trás+HK com juggle e estalo pesado e custo de 20% (SPEC-079).
+
+- Global: `desperation-priority` — invencibilidade dos DESPERATION, exceção para projétil DESPERATION e dissipação no empate (SPEC-080).
+
+- Global: `crouch-stand-dash` — dash imediato ao levantar do agachamento (SPEC-081).
+
+- Global: `title-rebirth` — REBIRTH sob o logo da tela de título (SPEC-082).
+
+- Ryo: `black-gi-start` — START na seleção escolhe o quimono preto com detalhes vermelhos (SPEC-083).

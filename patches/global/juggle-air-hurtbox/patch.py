@@ -1,4 +1,4 @@
-"""Mantem corpo atingivel no juggle de Kohou/Hien — SPEC-065."""
+"""Mantem corpo atingivel no juggle de Kohou/Hien â€” SPEC-065."""
 from asm68k import Ins,Branch,Label,JmpAbs,LeaPc
 from patchlib import Patch,Block,Hook
 
@@ -8,6 +8,15 @@ update=[
  Ins("48e7c0c0","movem.l d0-d1/a0-a1, -(a7)"),
  Ins("41f900109280","lea.l $109280.l, a0"),
  Label("owner"),
+ Ins("4a2803c3","tst.b $3c3(a0)"),Branch("beq","whiff"),
+ Ins("0c2800030040","cmpi.b #$3, $40(a0)"),Branch("bne","whiff"),
+ Ins("30280230","move.w $230(a0), d0"),
+ Ins("b06803c4","cmp.w $3c4(a0), d0"),Branch("bne","whiff"),
+ Branch("bra","sprite"),Label("whiff"),
+ Ins("0c28000203b6","cmpi.b #$2, $3b6(a0)"),Branch("bne","juggle"),
+ Ins("0c2800030040","cmpi.b #$3, $40(a0)"),Branch("bne","juggle"),
+ Ins("4a68006c","tst.w $6c(a0)"),Branch("bgt","sprite"),
+ Label("juggle"),
  Ins("0c680791006e","cmpi.w #$791, $6e(a0)"),Branch("bcs","next"),
  Ins("0c68079f006e","cmpi.w #$79f, $6e(a0)"),Branch("bhi","next"),
  Ins("4a68006c","tst.w $6c(a0)"),Branch("ble","next"),

@@ -36,6 +36,9 @@ FREE_START = 0xFDDA0
 FREE_END = 0xFFF00
 FREE_SPILL_START = 0x7ED70
 FREE_SPILL_END = 0x80000
+# Preenchimento zerado antes de fronteiras alinhadas ($F6000: código; $FC000:
+# tabela). Nenhum ponteiro da P-ROM aponta para dentro; margem de 8+ bytes.
+FREE_EXTRA = [(0xF5C10, 0xF6000), (0xFBCC0, 0xFBFF0)]
 
 ZIP_DATE = (1996, 12, 24, 23, 32, 0)  # build determinístico
 
@@ -103,7 +106,7 @@ def build(patch_ids, out_zip=OUT_ZIP, log=print):
             owner[a] = who
         rom[addr:addr + len(data)] = data
 
-    regions = [(FREE_START, FREE_END), (FREE_SPILL_START, FREE_SPILL_END)]
+    regions = [(FREE_START, FREE_END), (FREE_SPILL_START, FREE_SPILL_END)] + FREE_EXTRA
     # Ambas as reservas devem pertencer ao espaco zerado do dump validado.
     for lo,hi in regions:
         if any(rom[lo:hi]):
@@ -170,6 +173,7 @@ def build(patch_ids, out_zip=OUT_ZIP, log=print):
         return out
 
     # 2ª passagem: grava.
+    other, other_owner = {}, {}  # arquivos além da P1 (rom_data) e dono de cada byte
     for p in patches:
         for b in p.blocks:
             org = addrs[id(p)][b.name]
@@ -205,6 +209,26 @@ def build(patch_ids, out_zip=OUT_ZIP, log=print):
             write(e.addr, new, p.id)
         if p.data:
             log(f"  {p.id}: {len(p.data)} alteração(ões) de dados")
+
+        for e in p.rom_data:
+            if e.file == P1_NAME or e.file not in files:
+                raise BuildError(f"{p.id}: arquivo {e.file} inválido para rom_data")
+            expect, new = bytes.fromhex(e.expect), bytes(e.new)
+            if len(expect) != len(new):
+                raise BuildError(f"{p.id}: {e.file}+${e.offset:x} muda de tamanho")
+            buf = other.setdefault(e.file, bytearray(files[e.file]))
+            if bytes(buf[e.offset:e.offset + len(expect)]) != expect:
+                raise BuildError(f"{p.id}: bytes originais em {e.file}+${e.offset:x} não conferem")
+            for a in range(e.offset, e.offset + len(new)):
+                if (e.file, a) in other_owner:
+                    raise BuildError(f"conflito em {e.file}+${a:x}: {p.id} x {other_owner[(e.file, a)]}")
+                other_owner[(e.file, a)] = p.id
+            buf[e.offset:e.offset + len(new)] = new
+        if p.rom_data:
+            log(f"  {p.id}: {len(p.rom_data)} alteração(ões) em outros arquivos do romset")
+
+    for name, buf in other.items():
+        files[name] = bytes(buf)
 
     for addr, org, program in trampolines:
         write(org, assemble(program, org), f"cadeia ${addr:06x}")

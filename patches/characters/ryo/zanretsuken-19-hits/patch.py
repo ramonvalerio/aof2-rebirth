@@ -21,6 +21,8 @@ start = [
     Ins("0c6d001f0010", "cmpi.w #$1f, $10(a5)"),
     Branch("bhi", "out"),
     Ins("1d7c001303aa", "move.b #$13, $3aa(a6)"),
+    Ins("0c2e000303c2", "cmpi.b #$3, $3c2(a6)"),Branch("bne","out"),
+    Ins("1d7c001203aa", "move.b #$12, $3aa(a6)"),
     Label("out"),
     JmpNext(SPECIAL_CHOSEN),
 ]
@@ -47,7 +49,11 @@ PATCH = Patch(
     id="zanretsuken-19-hits",
     title="Ryo: Zanretsuken conta cada golpe: 19 hits",
     spec="src/backend/specs/SPEC-025-ryo-zanretsuken-19-hits.md",
-    blocks=[Block("multi_hit", multi_hit_block(RYO, ZANRETSUKEN, budget=BUDGET)),
+    blocks=[Block("multi_hit", [
+                Ins("0c6c023a0054", "cmpi.w #$23a, $54(a4)"), Branch("beq", "finisher_out"),
+                Ins("0c6c023b0054", "cmpi.w #$23b, $54(a4)"), Branch("bne", "multi_body"),
+                Label("finisher_out"), JmpNext(ATTACK_STATE), Label("multi_body"),
+                *multi_hit_block(RYO, ZANRETSUKEN, budget=BUDGET)]),
             Block("zanretsuken_start", start), Block("zanretsuken_contact", contact)],
     hooks=[shared_hook(ATTACK_STATE, "multi_hit"),
            shared_hook(SPECIAL_CHOSEN, "zanretsuken_start"),

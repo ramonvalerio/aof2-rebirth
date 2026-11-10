@@ -39,3 +39,5 @@ Confirmar na partida: atingir no alto após Hien break e Kohou break,
 continuação do contador de combo, golpes físicos/projéteis conforme seu
 alcance, terceiro hit do Kohou sem cancel e retorno normal após pouso.
 Não houve execução no emulador nesta revisão.
+
+Extensão SPEC-066: também mantém corpo vulnerável na tentativa vazia de grab ($3B6=2, estado 3, vivo), inclusive no chão; os filtros anteriores de juggle permanecem iguais.

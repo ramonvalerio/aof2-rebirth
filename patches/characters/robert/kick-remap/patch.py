@@ -36,6 +36,9 @@ DASH_HK_RECORD = "0c0c" "0000" "0008" "1500" "4710" "01b9" "0000" "0100"
 
 remap = [
     *only(ROBERT, KICK_SELECT),
+    Ins("0c2e000203be", "cmpi.b #$2, $3be(a6)"), Branch("bne", "regular"),
+    Ins("0c440031", "cmpi.w #$31, d4"), Branch("beq", "out"),
+    Label("regular"),
     Ins("0244007f", "andi.w #$7f, d4"),             # como o original
     Ins("0c440030", "cmpi.w #$30, d4"),
     Branch("bcs", "out"),

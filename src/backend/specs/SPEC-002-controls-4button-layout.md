@@ -128,3 +128,11 @@ O arremesso passou de A+B para A+C. A+B deixa de ser combinação e sai como bot
 **Causa:** a função original "C repete o último ataque" (`$1D896`, chamada no neutro por `$1D842`). Ela conta quanto tempo o C (bruto, `$68` bit 6) fica segurado e, ao soltar, faz `or.b $235,$270` (`$1D8E2`): injeta o tipo do último ataque (`$235`, ex.: `$10` = soco) **sem** a marca de forte em `$271`. O resultado é um soco fraco.
 
 **Correção:** `$1D8E2` (`or.b d1,$270(a6)`) vira 2× `nop`. O C continua sendo só o soco forte, pelo tradutor.
+
+Grab LP+LK: tentativa que falha no chão agora mostra animação própria e recuperação vulnerável (SPEC-066). Grabs acertados e breaks de Kohou/Hien preservados.
+
+Finta de DESPERATION: LP+LK é consumido durante a preparação elegível, sem iniciar grab, conforme SPEC-067. Demais usos preservados.
+
+HP+HK também disponível no ar para todo o elenco, com as poses do golpe próprio e propriedade aérea (SPEC-076). No chão permanece como antes.
+
+Carga de Spirit atual: LP+LK+HK (C+A+B físicos), com prioridade sobre grab/break, conforme SPEC-005.

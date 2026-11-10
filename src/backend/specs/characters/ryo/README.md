@@ -48,7 +48,12 @@ emulador com o mesmo adversário, vida e configuração.
 | `kououken-impact-sound` | [Ryo: Kou'ouken fraco (C+D) toca o som de impacto do Hien Shippuukyaku](../../SPEC-035-ryo-kououken-impact-sound.md) |
 | `close-hp-kououken-target-combo` | [Ryo: target combo soco forte perto -> Kou'ouken fraco sempre acerta](../../SPEC-036-ryo-close-hp-kououken-target-combo.md) |
 | `desperation-command` | [Ryo: DESPERATION Ryukou Ranbu com v v> -> v> v <v <- + C](../../SPEC-037-ryo-desperation-command.md) |
+| `black-gi-start` | [Ryo: START na seleção escolhe o quimono preto](../../SPEC-083-ryo-black-gi-start.md) |
 
 - [Kohou com três versões](../../SPEC-062-ryo-kohou-three-buttons.md)
 
 - [Hien forte com dois chutes e break no segundo hit](../../SPEC-064-ryo-hien-strong-break.md)
+
+- [Zanretsuken: fraco termina em HP neutro, forte no gancho, EX em trás+HK com juggle e estalo pesado](../../SPEC-079-ryo-zanretsuken-three-buttons.md)
+
+- [START na seleção: quimono preto com detalhes vermelhos](../../SPEC-083-ryo-black-gi-start.md)

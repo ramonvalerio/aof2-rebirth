@@ -1,25 +1,17 @@
-"""spirit-charge-abc — SPEC-005.
+"""Spirit: LP+LK+HK segurados sem direcao — SPEC-005.
 
-Carregar a barra de espírito passa a exigir A+B+C segurados juntos
-(no original bastava segurar A, B ou C).
-
-$1B9FE é a condição de carga (Z=1 / d0=0 quando vale), lida do input bruto
-$68(a6): nenhuma direção segurada e (original) qualquer bit de $70.
-Usada em $1BA28 (20 frames na condição -> entra em carga) e $1B89E
-(continua carregando enquanto vale). A rotina é reescrita no lugar.
-
-Início instantâneo: o neutro ($1BA2C) soma 1 em $23E a cada frame na
-condição e só entra na carga com $23E >= $14 (20 frames, $1BA30). O
-limite passa a 1: a carga começa no 1º frame com A+B+C segurados.
+Le $68 apos o remapeamento: LP=$10, LK=$20, HK=$80, total $B0.
+O tradutor de controles prioriza a combinacao sobre grab/break.
+O limiar de inicio continua em 1 frame. Mantem taxa e limite nativos.
 """
 from asm68k import Branch, Ins, Label
 from patchlib import Data, Hook, Patch
 
 charge_condition = [
-    # direções ($0F) e A/B/C ($70) do input bruto; D é ignorado como no original
-    Ins("707f", "moveq #$7f, d0"),
-    Ins("c02e0068", "and.b $68(a6), d0"),
-    Ins("0c000070", "cmpi.b #$70, d0"),
+    # Funcoes apos o remapeamento: LP=$10, LK=$20, HK=$80.
+    # Exige os tres e nenhuma direcao/soco forte adicional.
+    Ins("102e0068", "move.b $68(a6), d0"),
+    Ins("0c0000b0", "cmpi.b #$b0, d0"),
     Branch("bne", "no"),
     Ins("7000", "moveq #$0, d0"),
     Ins("4e75", "rts"),
@@ -30,7 +22,7 @@ charge_condition = [
 
 PATCH = Patch(
     id="spirit-charge-abc",
-    title="Carregar a barra exige A+B+C segurados juntos",
+    title="Carregar Spirit: soco fraco + chute fraco + chute forte",
     spec="src/backend/specs/SPEC-005-spirit-charge-abc.md",
     hooks=[
         # rotina original inteira ($1B9FE-$1BA15, 24 bytes)
