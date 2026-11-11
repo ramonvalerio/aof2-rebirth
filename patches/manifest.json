@@ -26,7 +26,8 @@
     "crouch-stand-dash",
     "crossup-close-pressure",
     "desperation-priority",
-    "title-rebirth"
+    "title-rebirth",
+    "start-select-flag"
   ],
   "characters": {
     "ryo": [
@@ -71,7 +72,8 @@
     ],
     "takuma": [
       "desperation-command",
-      "kououken-three-buttons"
+      "kououken-three-buttons",
+      "karate-mask-start"
     ],
     "king": [
       "moushuukyaku-three-buttons",

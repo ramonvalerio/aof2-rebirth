@@ -5,7 +5,7 @@ patch de personagem declara o hook com `shared_hook(...)` e termina com
 `JmpNext(<endereço>)` quando o personagem não é o dele; o build liga os
 patches do mesmo endereço em sequência (patchlib.Hook.chain).
 """
-from asm68k import Branch, Ins, JmpAbs, JmpNext, Label
+from asm68k import Branch, Ins, JmpAbs, JmpNext, Label, LeaPc, Raw
 from patchlib import Block, Data, Hook
 
 MOVE_TABLE = 0x023BA4   # 16 bytes por golpe
@@ -70,7 +70,35 @@ LANDING_ATTACK = 0x1C234
 # Movimento horizontal da reação; depois da conversão original para 16.16.
 REACTION_PUSH = 0x1CBB0
 
+# Retrato grande da seleção ($C940) e do "select enemy" ($E196): a0 aponta a
+# entrada (bloco, metade) da tabela $C96C. Blocos ANTES do original: trocam a0
+# por uma entrada própria para pedir outro bloco. a6 = cursor ($1C = registro).
+SELECT_PORTRAIT = 0xC962
+ENEMY_PORTRAIT = 0xE1B6
+# $D828 (cópia das paletas 5-6 do retrato): d5 = bloco. Blocos ANTES do
+# original; um bloco que reconhece o seu bloco mágico aponta a1 e salta $D834.
+PORTRAIT_PALETTE = 0xD828
+PORTRAIT_RESUME = 0xD834
+PORTRAIT_PALETTES = 0x180 + 5 * 0x30     # $D81A soma isto à origem (metade 1)
+
 _SHARED = {
+    SELECT_PORTRAIT: ("3a183c1061000eb2", "before", [
+        Ins("3a18", "move.w (a0)+, d5"),
+        Ins("3c10", "move.w (a0), d6"),
+        Ins("4eb90000d81a", "jsr $d81a.l"),
+    ]),
+    ENEMY_PORTRAIT: ("3a183c1048e70002", "before", [
+        Ins("3a18", "move.w (a0)+, d5"),
+        Ins("3c10", "move.w (a0), d6"),
+        Ins("48e70002", "movem.l a6, -(a7)"),
+    ]),
+    PORTRAIT_PALETTE: ("226d0080e14dd2c5d2c5d2c5", "before", [
+        Ins("226d0080", "movea.l $80(a5), a1"),
+        Ins("e14d", "lsl.w #$8, d5"),
+        Ins("d2c5", "adda.w d5, a1"),
+        Ins("d2c5", "adda.w d5, a1"),
+        Ins("d2c5", "adda.w d5, a1"),
+    ]),
     ANIM_FRAME: ("2d48005008ee0007005e", "after", [
         Ins("2d480050", "move.l a0, $50(a6)"),
         Ins("08ee0007005e", "bset.b #$7, $5e(a6)"),
@@ -340,3 +368,44 @@ def fireball_three_buttons(char, strong_id, name):
     hooks = [shared_hook(SPECIAL_CHOSEN, f"{name}_buttons"), shared_hook(CMD_STEP, f"{name}_command")]
     data = [Data(MOVE_TABLE + ids[2] * 16 + _HIT_EFFECT, "00", f"{_KNOCKDOWN:02x}")]
     return blocks, hooks, data
+
+
+START_FLAG = 0x3DA      # registro do jogador: escolhido com START (global/start-select-flag)
+
+
+def start_portrait(block, magic, hook):
+    """Bloco encadeado em SELECT_PORTRAIT/ENEMY_PORTRAIT: entrada (block, 1) com
+    a flag do START no registro ($1C do cursor) -> entrada (magic, 1)."""
+    return [
+        Ins(f"0c50{block:04x}", f"cmpi.w #${block:x}, (a0)"),
+        Branch("bne", "pass"),
+        Ins("0c6800010002", "cmpi.w #$1, $2(a0)"),
+        Branch("bne", "pass"),
+        Ins("2f09", "move.l a1, -(a7)"),
+        Ins("226e001c", "movea.l $1c(a6), a1"),
+        Ins(f"4a29{START_FLAG:04x}", f"tst.b ${START_FLAG:x}(a1)"),
+        Ins("225f", "movea.l (a7)+, a1"),
+        Branch("beq", "pass"),
+        LeaPc("entry", 0),
+        JmpNext(hook),
+        Label("entry"),
+        Raw(f"{magic:04x}0001"),
+        Label("pass"),
+        JmpNext(hook),
+    ]
+
+
+def start_portrait_palette(magic, palettes_hex):
+    """Bloco encadeado em PORTRAIT_PALETTE: d5 = magic -> paletas 5-6 do patch
+    (2 x 48 bytes, RGB de 6 bits)."""
+    return [
+        Ins(f"0c45{magic:04x}", f"cmpi.w #${magic:x}, d5"),
+        Branch("bne", "pass"),
+        LeaPc("palettes", 1),
+        Ins(f"92fc{PORTRAIT_PALETTES:04x}", f"suba.w #${PORTRAIT_PALETTES:x}, a1"),
+        JmpAbs(PORTRAIT_RESUME),
+        Label("pass"),
+        JmpNext(PORTRAIT_PALETTE),
+        Label("palettes"),
+        Raw(palettes_hex),
+    ]

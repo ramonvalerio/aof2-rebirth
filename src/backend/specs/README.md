@@ -57,3 +57,5 @@ separam o escopo sem quebrar referências do código e do launcher.
 - [SPEC-082: REBIRTH na tela de título](SPEC-082-title-rebirth.md)
 
 - [SPEC-083: Ryo, START na seleção escolhe o quimono preto](SPEC-083-ryo-black-gi-start.md)
+
+- [SPEC-084: Takuma, START na seleção mostra o Mr. Karate no retrato](SPEC-084-takuma-karate-mask-start.md)

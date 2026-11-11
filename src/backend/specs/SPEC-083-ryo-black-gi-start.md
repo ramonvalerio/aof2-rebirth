@@ -1,6 +1,8 @@
 # SPEC-083: Ryo — START na seleção escolhe o quimono preto
 
 - Patch de personagem: `characters/ryo/black-gi-start`.
+- Patch global: `start-select-flag` (confirmação com START e flag `$3DA`,
+  usada também pela SPEC-084).
 - Status: implementado e conferido no FBNeo (START → preto; B → azul
   original); validação na MiSTer pendente.
 
@@ -24,6 +26,10 @@ mudam.
   bloco na sprite ($1B440: `(lado×2 + cor&1) × 8`).
 
 ## Implementação
+
+Os hooks $C7CE/$C75E ficam no patch global `start-select-flag`; os do
+retrato ($C962, $E1B6, $D828) são encadeados (`charlib.shared_hook`), porque o
+Takuma (SPEC-084) usa os mesmos pontos.
 
 - **$C7CE** (confirmação): sem A–D, a borda de START em $10FDAD (bit 0 P1,
   bit 2 P2) confirma como B e liga a flag `$3DA` do registro. A–D desligam a

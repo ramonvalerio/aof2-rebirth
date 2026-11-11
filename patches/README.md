@@ -158,3 +158,7 @@ Um patch de personagem tem uma responsabilidade só, mesmo quando o ponto do mot
 - Global: `title-rebirth` — REBIRTH sob o logo da tela de título (SPEC-082).
 
 - Ryo: `black-gi-start` — START na seleção escolhe o quimono preto com detalhes vermelhos (SPEC-083).
+
+- Global: `start-select-flag` — START na seleção confirma como B e marca o jogador para as variantes (SPEC-083).
+
+- Takuma: `karate-mask-start` — START na seleção mostra o Mr. Karate do AOF1 no retrato (SPEC-084).

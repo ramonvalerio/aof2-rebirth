@@ -10,6 +10,7 @@ Os patches globais são aplicados antes dos patches de personagem.
 | `landing-dash` | [Dash imediato ao aterrissar](../SPEC-056-landing-dash.md) |
 | `crouch-stand-dash` | [Dash imediato ao levantar do agachamento](../SPEC-081-crouch-stand-dash.md) |
 | `title-rebirth` | [REBIRTH na tela de título](../SPEC-082-title-rebirth.md) |
+| `start-select-flag` | [START na seleção confirma como B e marca o jogador](../SPEC-083-ryo-black-gi-start.md) |
 | `controls-4button-layout` | [Controles: A/B chutes, C/D socos, A+C arremesso, C+D uppercut, B+D chute baixo, START provoca](../SPEC-002-controls-4button-layout.md) |
 | `free-special-moves` | [Especiais não gastam barra (SUPER e DESPERATION mantêm o custo)](../SPEC-003-free-special-moves.md) |
 | `special-strength-by-button` | [Força do especial pelo botão (fraco = barra vermelha, forte = barra cheia)](../SPEC-004-special-strength-by-button.md) |
