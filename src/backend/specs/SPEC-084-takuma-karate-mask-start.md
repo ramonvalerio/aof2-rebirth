@@ -37,6 +37,8 @@ de máscara de tengu** do primeiro Art of Fighting (`rom/aof.zip`).
 - **Tiles:** 43 tiles na C-ROM a partir de $DEA0 (banco 0; sequência zerada
   $DE9C–$DEFF do par c3/c4), via `RomData`. Arte 6×8 nas colunas 1–6 de um
   quadro 8×8; colunas vazias e o fragmento de outro desenho ficam em branco.
+  A arte é espelhada: o Mr. Karate olha para a esquerda, como o retrato
+  original do Takuma.
 - **$5226** (id do gráfico): id em $0DF2–$0E03, objeto `a6` igual ao do slot
   `$34` ou `$3C` de um cursor confirmado (`$3E`), registro com flag e cor 1 →
   devolve o gráfico novo (formato $18, 8×8), em vez da tabela.

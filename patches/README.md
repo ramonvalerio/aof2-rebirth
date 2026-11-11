@@ -161,4 +161,8 @@ Um patch de personagem tem uma responsabilidade só, mesmo quando o ponto do mot
 
 - Global: `start-select-flag` — START na seleção confirma como B e marca o jogador para as variantes (SPEC-083).
 
+- Global: `throw-direction` — arremesso para o lado do direcional, neutro = frente (SPEC-087).
+
 - Takuma: `karate-mask-start` — START na seleção mostra o Mr. Karate do AOF1 no retrato (SPEC-084).
+
+- Takuma: `karate-head-fight` — máscara de tengu do Mr. Karate no rosto do Takuma na luta, protótipo na guarda parada (SPEC-085).

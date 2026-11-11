@@ -59,3 +59,7 @@ separam o escopo sem quebrar referências do código e do launcher.
 - [SPEC-083: Ryo, START na seleção escolhe o quimono preto](SPEC-083-ryo-black-gi-start.md)
 
 - [SPEC-084: Takuma, START na seleção mostra o Mr. Karate no retrato](SPEC-084-takuma-karate-mask-start.md)
+
+- [SPEC-085: Takuma, máscara de tengu na luta (protótipo)](SPEC-085-takuma-karate-head-fight.md)
+
+- [SPEC-087: Arremesso para o lado do direcional](SPEC-087-throw-direction.md)

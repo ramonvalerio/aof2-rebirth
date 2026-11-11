@@ -45,6 +45,12 @@ class Branch:
 
 
 @dataclass
+class Dbra:
+    reg: int     # registrador de dados (d0-d7)
+    target: str  # rótulo
+
+
+@dataclass
 class LeaPc:
     target: str  # rótulo
     reg: int     # registrador de endereço (a0-a7)
@@ -73,7 +79,7 @@ def _size(item):
         return 6
     if isinstance(item, Raw):
         return len(bytes.fromhex(item.hex))
-    if isinstance(item, LeaPc):
+    if isinstance(item, (LeaPc, Dbra)):
         return 4
     raise TypeError(item)
 
@@ -108,6 +114,12 @@ def assemble(program, origin):
             expected.append((pc, f"jmp ${item.addr:x}.l"))
         elif isinstance(item, Raw):
             b = bytes.fromhex(item.hex)
+        elif isinstance(item, Dbra):
+            disp = labels[item.target] - (pc + 2)
+            if not -0x8000 <= disp <= 0x7FFF:
+                raise ValueError(f"dbra fora de alcance: {item.target}")
+            b = (0x51C8 | item.reg).to_bytes(2, "big") + (disp & 0xFFFF).to_bytes(2, "big")
+            expected.append((pc, f"dbra d{item.reg}, ${labels[item.target]:x}"))
         elif isinstance(item, LeaPc):
             disp = labels[item.target] - (pc + 2)
             if not -0x8000 <= disp <= 0x7FFF:

@@ -38,7 +38,10 @@ FREE_SPILL_START = 0x7ED70
 FREE_SPILL_END = 0x80000
 # Preenchimento zerado antes de fronteiras alinhadas ($F6000: código; $FC000:
 # tabela). Nenhum ponteiro da P-ROM aponta para dentro; margem de 8+ bytes.
-FREE_EXTRA = [(0xF5C10, 0xF6000), (0xFBCC0, 0xFBFF0)]
+FREE_EXTRA = [(0xF5C10, 0xF6000), (0xFBCC0, 0xFBFF0),
+              # Blocos de paleta inteiramente zerados ($5D, $60, $6B: $68000 + bloco*$300),
+              # fora das tabelas de cena/personagem e nunca pedidos no attract.
+              (0x79700, 0x79A00), (0x7A000, 0x7A300), (0x7C100, 0x7C400)]
 
 ZIP_DATE = (1996, 12, 24, 23, 32, 0)  # build determinístico
 
